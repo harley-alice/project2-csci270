@@ -7,111 +7,127 @@ export default function InventoryDashboard({ items, onRemoveItem }) {
       <div
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '16px',
+          borderRadius: '24px',
           padding: '48px 24px',
           textAlign: 'center',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-          border: '1px solid #f1f5f9'
+          boxShadow: '0 10px 30px rgba(244, 114, 182, 0.1)',
+          border: '2px dashed #fbcfe8'
         }}
       >
-        <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧊</div>
-        <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>
-          Your digital fridge is empty
+        <div style={{ fontSize: '48px', marginBottom: '10px' }}>🍰</div>
+        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#831843' }}>
+          Your fridge is totally empty!
         </h3>
-        <p style={{ fontSize: '14px', color: '#64748b', maxWidth: '420px', margin: '6px auto 0' }}>
-          Take a photo of your fridge or scan individual groceries above. We'll automatically keep track of when things expire!
+        <p style={{ fontSize: '14px', color: '#9d4c6d', maxWidth: '400px', margin: '6px auto 0' }}>
+          Snap a picture of your shelves above and let's stock up your cute fridge! 💕
         </p>
       </div>
     );
   }
 
-  // Group by freshness urgency
   const urgentItems = items.filter((item) => (item.daysRemaining ?? 5) <= 2);
-  const goodItems = items.filter((item) => (item.daysRemaining ?? 5) > 2);
 
   return (
     <div
       style={{
         backgroundColor: '#ffffff',
-        borderRadius: '16px',
-        padding: '24px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-        border: '1px solid #f1f5f9'
+        borderRadius: '24px',
+        padding: '28px',
+        boxShadow: '0 10px 30px rgba(244, 114, 182, 0.1)',
+        border: '2px solid #fce7f3'
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      {/* Fridge Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.3px' }}>
-            What's In Your Fridge
+          <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#831843', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>My Cute Fridge</span> 🍧
           </h2>
-          <p style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
-            {items.length} items tracked using USDA FoodKeeper freshness guidelines
+          <p style={{ fontSize: '13px', color: '#9d4c6d', marginTop: '2px' }}>
+            {items.length} items keeping fresh & yummy!
           </p>
         </div>
 
         {urgentItems.length > 0 && (
           <div
             style={{
-              backgroundColor: '#fef2f2',
-              color: '#dc2626',
-              padding: '6px 14px',
+              backgroundColor: '#fff1f2',
+              color: '#e11d48',
+              padding: '8px 16px',
               borderRadius: '20px',
               fontSize: '13px',
               fontWeight: '700',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              border: '1px solid #fecaca'
+              border: '1.5px solid #fecdd3',
+              boxShadow: '0 2px 8px rgba(225, 29, 72, 0.1)'
             }}
           >
-            <span>⚠️</span> {urgentItems.length} {urgentItems.length === 1 ? 'item needs' : 'items need'} eating soon
+            <span>🍓</span> {urgentItems.length} {urgentItems.length === 1 ? 'snack needs' : 'snacks need'} eating ASAP!
           </div>
         )}
       </div>
 
+      {/* Grid of Fridge Items */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
         {items.map((item) => {
-          const meta = FOOD_METADATA[item.label] || { name: item.label, emoji: '🥗' };
+          const meta = FOOD_METADATA[item.label] || { name: item.label, emoji: '🍓' };
           const daysLeft = item.daysRemaining ?? meta.defaultDays ?? 5;
 
           const isExpired = daysLeft <= 0;
           const isUrgent = daysLeft <= 2 && !isExpired;
 
-          // Don Norman Signifiers: unmistakable color + wording
-          const statusBg = isExpired ? '#fef2f2' : isUrgent ? '#fffbeb' : '#f0fdf4';
-          const statusText = isExpired ? '#b91c1c' : isUrgent ? '#b45309' : '#15803d';
-          const statusBorder = isExpired ? '#fecaca' : isUrgent ? '#fde68a' : '#bbf7d0';
-          const labelText = isExpired
-            ? 'Past safe date'
+          // Cute status styling
+          const pillBg = isExpired ? '#ffe4e6' : isUrgent ? '#fef3c7' : '#ecfdf5';
+          const pillColor = isExpired ? '#be123c' : isUrgent ? '#b45309' : '#047857';
+          const pillBorder = isExpired ? '#fecdd3' : isUrgent ? '#fde68a' : '#a7f3d0';
+          const statusMessage = isExpired
+            ? '⚠️ Spoiled or toss time!'
             : isUrgent
-            ? `Eat within ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`
-            : `Fresh for ${daysLeft} days`;
+            ? `⏳ Eat in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}!`
+            : `🌸 Fresh for ${daysLeft} days`;
 
           return (
             <div
               key={item.id}
               style={{
-                borderRadius: '14px',
-                border: '1px solid #e2e8f0',
+                borderRadius: '20px',
+                border: '1.5px solid #fce7f3',
                 padding: '16px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                transition: 'transform 0.1s ease, box-shadow 0.1s ease'
+                backgroundColor: '#fffbfa',
+                boxShadow: '0 4px 12px rgba(244, 114, 182, 0.06)',
+                transition: 'all 0.15s ease'
               }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '28px', lineHeight: 1 }}>{meta.emoji}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '14px',
+                        backgroundColor: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                        border: '1px solid #fce7f3'
+                      }}
+                    >
+                      {meta.emoji}
+                    </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#1e293b' }}>
+                      <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#4a2835' }}>
                         {meta.name}
                       </h4>
-                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                        Added {item.dateAdded || 'Today'}
+                      <span style={{ fontSize: '12px', color: '#9d4c6d' }}>
+                        Tucked in {item.dateAdded || 'Today'}
                       </span>
                     </div>
                   </div>
@@ -121,15 +137,13 @@ export default function InventoryDashboard({ items, onRemoveItem }) {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#cbd5e1',
+                      color: '#f472b6',
                       fontSize: '18px',
                       cursor: 'pointer',
                       padding: '2px 6px',
-                      borderRadius: '4px'
+                      borderRadius: '6px'
                     }}
-                    onMouseOver={(e) => (e.currentTarget.style.color = '#ef4444')}
-                    onMouseOut={(e) => (e.currentTarget.style.color = '#cbd5e1')}
-                    title="Remove from fridge"
+                    title="Ate it / Remove"
                   >
                     ×
                   </button>
@@ -138,10 +152,10 @@ export default function InventoryDashboard({ items, onRemoveItem }) {
 
               <div
                 style={{
-                  backgroundColor: statusBg,
-                  color: statusText,
-                  border: `1px solid ${statusBorder}`,
-                  borderRadius: '8px',
+                  backgroundColor: pillBg,
+                  color: pillColor,
+                  border: `1.5px solid ${pillBorder}`,
+                  borderRadius: '12px',
                   padding: '7px 12px',
                   fontSize: '12px',
                   fontWeight: '700',
@@ -152,8 +166,7 @@ export default function InventoryDashboard({ items, onRemoveItem }) {
                   gap: '6px'
                 }}
               >
-                <span>{isExpired ? '🚫' : isUrgent ? '⏳' : '✅'}</span>
-                <span>{labelText}</span>
+                <span>{statusMessage}</span>
               </div>
             </div>
           );

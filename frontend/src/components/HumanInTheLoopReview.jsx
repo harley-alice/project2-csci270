@@ -17,24 +17,24 @@ export default function HumanInTheLoopReview({
     <div
       style={{
         backgroundColor: '#ffffff',
-        borderRadius: '16px',
+        borderRadius: '24px',
         padding: '24px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
-        border: '1px solid #f1f5f9',
+        boxShadow: '0 10px 30px rgba(244, 114, 182, 0.12)',
+        border: '2px solid #fce7f3',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         boxSizing: 'border-box'
       }}
     >
-      {/* Header */}
+      {/* Cutesy Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.3px' }}>
-            Items Found in Fridge
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#831843', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>Spotted in your Fridge</span> 🎀
           </h2>
-          <p style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
-            Check what we spotted and confirm below
+          <p style={{ fontSize: '13px', color: '#9d4c6d', marginTop: '3px' }}>
+            Tap the ones you want to keep track of!
           </p>
         </div>
 
@@ -42,57 +42,57 @@ export default function HumanInTheLoopReview({
           <button
             onClick={onAcceptAllAboveThreshold}
             style={{
-              backgroundColor: '#10b981',
+              backgroundColor: '#ec4899',
               color: '#ffffff',
               border: 'none',
-              borderRadius: '10px',
-              padding: '9px 16px',
+              borderRadius: '20px',
+              padding: '10px 18px',
               fontSize: '13px',
               fontWeight: '700',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              boxShadow: '0 2px 4px rgba(16, 185, 129, 0.25)',
+              boxShadow: '0 4px 14px rgba(236, 72, 153, 0.35)',
               transition: 'all 0.15s ease'
             }}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#059669')}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#10b981')}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#db2777')}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#ec4899')}
           >
-            <span>✓</span> Add All to Fridge
+            <span>💖</span> Add All to Fridge!
           </button>
         )}
       </div>
 
-      {/* Sensitivity / Filter Controls (Don Norman: Conceptual model made plain) */}
+      {/* Cutesy Slider: Eye Focus / Scanner */}
       <div
         style={{
-          backgroundColor: '#f8fafc',
-          borderRadius: '12px',
-          padding: '14px 16px',
-          marginBottom: '20px',
-          border: '1px solid #e2e8f0'
+          backgroundColor: '#fff1f2',
+          borderRadius: '18px',
+          padding: '14px 18px',
+          marginBottom: '18px',
+          border: '1.5px dashed #fecdd3'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
-            Scanner Sensitivity
+          <span style={{ fontSize: '13px', fontWeight: '700', color: '#9f1239', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>👀 Scanner Eye</span>
           </span>
           <span
             style={{
               fontSize: '12px',
               fontWeight: '700',
-              color: '#2563eb',
-              backgroundColor: '#eff6ff',
-              padding: '2px 8px',
-              borderRadius: '6px'
+              color: '#be185d',
+              backgroundColor: '#ffe4e6',
+              padding: '3px 10px',
+              borderRadius: '12px'
             }}
           >
             {confidenceThreshold <= 0.40
-              ? 'Showing faint & uncertain items'
+              ? '✨ Catching everything'
               : confidenceThreshold >= 0.70
-              ? 'Showing clear & obvious items only'
-              : 'Balanced detection'}
+              ? '🌸 Only super obvious snacks'
+              : '💕 Just right'}
           </span>
         </div>
 
@@ -105,22 +105,22 @@ export default function HumanInTheLoopReview({
           onChange={(e) => onConfidenceChange(parseFloat(e.target.value))}
           style={{
             width: '100%',
-            accentColor: '#2563eb',
+            accentColor: '#ec4899',
             cursor: 'pointer'
           }}
         />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '6px' }}>
-          <span>Find more items</span>
-          <span>Fewer false guesses</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#f43f5e', marginTop: '4px', fontWeight: '500' }}>
+          <span>Find more goodies</span>
+          <span>Only high certainty</span>
         </div>
       </div>
 
-      {/* List of Detections */}
+      {/* Detection Cards List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
         {visibleDetections.map((det) => {
           const isSelected = selectedId === det.id;
-          const meta = FOOD_METADATA[det.label] || { name: det.label, emoji: '🥗', defaultDays: 5 };
+          const meta = FOOD_METADATA[det.label] || { name: det.label, emoji: '🍓', defaultDays: 5 };
           const isLowCertainty = det.confidence < 0.60;
           const isJar = det.label === 'jar';
           const isAccepted = det.status === 'accepted';
@@ -133,59 +133,81 @@ export default function HumanInTheLoopReview({
               key={det.id}
               onClick={() => onSelectDetection(det.id)}
               style={{
-                borderRadius: '12px',
-                border: isSelected ? '2px solid #3b82f6' : isAccepted ? '1px solid #86efac' : '1px solid #e2e8f0',
-                backgroundColor: isSelected ? '#eff6ff' : isAccepted ? '#f0fdf4' : '#ffffff',
+                borderRadius: '18px',
+                border: isSelected
+                  ? '2px solid #ec4899'
+                  : isAccepted
+                  ? '2px solid #86efac'
+                  : '1.5px solid #fce7f3',
+                backgroundColor: isSelected
+                  ? '#fdf2f8'
+                  : isAccepted
+                  ? '#f0fdf4'
+                  : '#ffffff',
                 padding: '16px',
-                boxShadow: isSelected ? '0 4px 12px rgba(59, 130, 246, 0.12)' : '0 1px 3px rgba(0,0,0,0.03)',
+                boxShadow: isSelected
+                  ? '0 6px 16px rgba(236, 72, 153, 0.15)'
+                  : '0 2px 8px rgba(0,0,0,0.02)',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
             >
-              {/* Item Card Top */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '28px', lineHeight: 1 }}>{meta.emoji}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      width: '46px',
+                      height: '46px',
+                      borderRadius: '14px',
+                      backgroundColor: '#fff1f2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      boxShadow: 'inset 0 2px 4px rgba(244, 114, 182, 0.1)'
+                    }}
+                  >
+                    {meta.emoji}
+                  </div>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#1e293b' }}>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#4a2835' }}>
                       {meta.name}
                     </h4>
-                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>
-                      Keeps fresh ~{meta.defaultDays} days in fridge
+                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#9d4c6d' }}>
+                      Stays fresh ~{meta.defaultDays} days ✨
                     </p>
                   </div>
                 </div>
 
-                {/* Clear Affordance Action Buttons */}
                 <div style={{ display: 'flex', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => onUpdateDetection(det.id, { status: isAccepted ? 'pending' : 'accepted' })}
                     style={{
-                      backgroundColor: isAccepted ? '#10b981' : '#f1f5f9',
-                      color: isAccepted ? '#ffffff' : '#334155',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '7px 12px',
+                      backgroundColor: isAccepted ? '#10b981' : '#fdf2f8',
+                      color: isAccepted ? '#ffffff' : '#be185d',
+                      border: isAccepted ? 'none' : '1px solid #fbcfe8',
+                      borderRadius: '12px',
+                      padding: '8px 14px',
                       fontSize: '12px',
                       fontWeight: '700',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px',
-                      transition: 'all 0.15s'
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    {isAccepted ? '✓ Added' : '+ Add'}
+                    {isAccepted ? '✓ In Fridge!' : '💖 Keep'}
                   </button>
 
                   <button
                     onClick={() => onUpdateDetection(det.id, { status: 'rejected' })}
                     style={{
-                      backgroundColor: 'transparent',
-                      color: '#94a3b8',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      padding: '7px 10px',
+                      backgroundColor: '#fff1f2',
+                      color: '#f43f5e',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '8px 10px',
                       fontSize: '12px',
                       cursor: 'pointer'
                     }}
@@ -196,32 +218,32 @@ export default function HumanInTheLoopReview({
                 </div>
               </div>
 
-              {/* Norman Principle: Clear Feedback for Ambiguity / Carter's Jar Case */}
+              {/* Cute clarification notice */}
               {(isJar || isLowCertainty) && (
                 <div
                   style={{
-                    backgroundColor: '#fffbeb',
-                    border: '1px solid #fde68a',
-                    borderRadius: '8px',
-                    padding: '10px 12px',
+                    backgroundColor: '#fff7ed',
+                    border: '1.5px dashed #fed7aa',
+                    borderRadius: '14px',
+                    padding: '12px',
                     marginTop: '12px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '6px'
+                    gap: '8px'
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#92400e', fontWeight: '700' }}>
-                    <span>💡</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#c2410c', fontWeight: '700' }}>
+                    <span>✨</span>
                     <span>
                       {isJar
-                        ? "This looks like a jar or container. What's inside?"
-                        : "We're not 100% sure on this one. Is it correct?"}
+                        ? "Ooh, a mystery jar! What goodies are inside?"
+                        : "Hmm, not totally sure! Did we guess this right?"}
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
-                    <span style={{ fontSize: '12px', color: '#78350f' }}>Change to:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', color: '#9a3412', fontWeight: '600' }}>Actually it's:</span>
                     <select
                       value={det.label}
                       onChange={(e) =>
@@ -232,18 +254,18 @@ export default function HumanInTheLoopReview({
                         })
                       }
                       style={{
-                        padding: '6px 10px',
-                        borderRadius: '6px',
-                        border: '1px solid #d97706',
+                        padding: '6px 12px',
+                        borderRadius: '10px',
+                        border: '1.5px solid #fb923c',
                         fontSize: '13px',
-                        fontWeight: '600',
-                        color: '#1e293b',
+                        fontWeight: '700',
+                        color: '#4a2835',
                         backgroundColor: '#ffffff',
                         cursor: 'pointer'
                       }}
                     >
                       {FOOD_CLASSES.map((cls) => {
-                        const m = FOOD_METADATA[cls] || { name: cls, emoji: '' };
+                        const m = FOOD_METADATA[cls] || { name: cls, emoji: '🍓' };
                         return (
                           <option key={cls} value={cls}>
                             {m.emoji} {m.name}

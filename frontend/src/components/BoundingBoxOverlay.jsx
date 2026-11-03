@@ -17,10 +17,11 @@ export default function BoundingBoxOverlay({
       style={{
         position: 'relative',
         width: '100%',
-        backgroundColor: '#0f172a',
-        borderRadius: '16px',
+        backgroundColor: '#fce7f3',
+        borderRadius: '24px',
         overflow: 'hidden',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 12px 30px rgba(244, 114, 182, 0.18)',
+        border: '3px solid #fbcfe8',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -28,13 +29,14 @@ export default function BoundingBoxOverlay({
     >
       <img
         src={imageUrl}
-        alt="Fridge Interior"
+        alt="Fridge contents"
         style={{
           display: 'block',
           width: '100%',
-          maxHeight: '520px',
+          maxHeight: '480px',
           objectFit: 'contain',
-          userSelect: 'none'
+          userSelect: 'none',
+          borderRadius: '20px'
         }}
       />
 
@@ -58,15 +60,16 @@ export default function BoundingBoxOverlay({
           const height = (ymax - ymin) * 1000;
 
           const isSelected = selectedId === det.id;
-          const meta = FOOD_METADATA[det.label] || { name: det.label, emoji: '🥗' };
+          const meta = FOOD_METADATA[det.label] || { name: det.label, emoji: '🍓' };
           const isWarning = det.label === 'jar' || det.confidence < 0.60;
 
-          // Norman Affordance Colors: warm amber for items needing user check, calm emerald for good, vibrant indigo for selected
-          const strokeColor = isSelected ? '#3b82f6' : isWarning ? '#f59e0b' : '#10b981';
-          const badgeBg = isSelected ? '#2563eb' : isWarning ? '#d97706' : '#059669';
+          // Cutesy pastel palette:
+          // Selected = lavender purple, Warning = pastel apricot/peach, Normal = bubblegum pink/rose
+          const strokeColor = isSelected ? '#a855f7' : isWarning ? '#fb923c' : '#ec4899';
+          const badgeBg = isSelected ? '#9333ea' : isWarning ? '#f97316' : '#ec4899';
 
           const labelText = `${meta.emoji} ${meta.name}`;
-          const badgeWidth = Math.max(110, labelText.length * 9.5 + 40);
+          const badgeWidth = Math.max(120, labelText.length * 9.5 + 40);
 
           return (
             <g
@@ -74,40 +77,40 @@ export default function BoundingBoxOverlay({
               style={{ pointerEvents: 'all', cursor: 'pointer' }}
               onClick={() => onSelectDetection(det.id)}
             >
-              {/* Highlight background on hover/selection */}
+              {/* Cute glow outline */}
               <rect
                 x={x}
                 y={y}
                 width={width}
                 height={height}
-                fill={isSelected ? 'rgba(59, 130, 246, 0.22)' : 'rgba(0, 0, 0, 0.08)'}
+                fill={isSelected ? 'rgba(168, 85, 247, 0.22)' : 'rgba(236, 72, 153, 0.08)'}
                 stroke={strokeColor}
-                strokeWidth={isSelected ? 4 : 2.5}
-                strokeDasharray={isWarning ? '6,4' : 'none'}
-                rx="6"
+                strokeWidth={isSelected ? 4 : 3}
+                strokeDasharray={isWarning ? '8,5' : 'none'}
+                rx="14"
               />
 
-              {/* Pill badge */}
+              {/* Cute rounded tag */}
               <rect
                 x={x}
-                y={Math.max(4, y - 30)}
+                y={Math.max(6, y - 32)}
                 width={badgeWidth}
                 height={30}
                 fill={badgeBg}
-                rx="6"
-                filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.25))"
+                rx="15"
+                filter="drop-shadow(0 4px 8px rgba(236, 72, 153, 0.3))"
               />
 
-              {/* Item text */}
+              {/* Tag text */}
               <text
-                x={x + 10}
-                y={Math.max(4, y - 30) + 20}
+                x={x + 12}
+                y={Math.max(6, y - 32) + 20}
                 fill="#ffffff"
-                fontSize="14"
+                fontSize="13"
                 fontWeight="700"
-                fontFamily="'Plus Jakarta Sans', sans-serif"
+                fontFamily="'Fredoka', 'Outfit', sans-serif"
               >
-                {labelText}
+                {labelText} ✨
               </text>
             </g>
           );

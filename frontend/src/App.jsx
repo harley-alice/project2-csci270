@@ -12,21 +12,20 @@ export default function App() {
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.50);
   const [selectedId, setSelectedId] = useState(null);
 
-  // Digital fridge state
+  // Initial cute fridge stock
   const [inventory, setInventory] = useState([
-    { id: 'inv-1', label: 'milk', daysRemaining: 6, dateAdded: 'Nov 1' },
-    { id: 'inv-2', label: 'chicken', daysRemaining: 1, dateAdded: 'Oct 31' },
-    { id: 'inv-3', label: 'spinach', daysRemaining: 3, dateAdded: 'Nov 1' }
+    { id: 'inv-1', label: 'strawberries', daysRemaining: 3, dateAdded: 'Nov 1' },
+    { id: 'inv-2', label: 'yogurt', daysRemaining: 7, dateAdded: 'Oct 31' },
+    { id: 'inv-3', label: 'milk', daysRemaining: 1, dateAdded: 'Oct 28' },
+    { id: 'inv-4', label: 'blueberries', daysRemaining: 5, dateAdded: 'Nov 2' }
   ]);
 
-  // Handle image upload from user camera / gallery
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setImageSrc(url);
       setSelectedId(null);
-      // Reset detections with pending state
       setDetections(MOCK_DETECTIONS.map((d) => ({ ...d, status: 'pending' })));
     }
   };
@@ -36,7 +35,6 @@ export default function App() {
       prev.map((det) => (det.id === id ? { ...det, ...changes } : det))
     );
 
-    // If marked as accepted, add to fridge inventory
     if (changes.status === 'accepted') {
       const det = detections.find((d) => d.id === id);
       if (det) {
@@ -87,73 +85,78 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', color: '#1e293b' }}>
-      {/* Friendly Top Navigation */}
+    <div style={{ minHeight: '100vh', paddingBottom: '60px' }}>
+      {/* Cutesy Header */}
       <header
         style={{
           backgroundColor: '#ffffff',
-          borderBottom: '1px solid #f1f5f9',
-          padding: '16px 28px',
+          borderBottom: '2px solid #fce7f3',
+          padding: '16px 32px',
           position: 'sticky',
           top: 0,
           zIndex: 50,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+          boxShadow: '0 4px 20px rgba(244, 114, 182, 0.08)'
         }}
       >
         <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div
               style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '12px',
-                backgroundColor: '#10b981',
+                width: '46px',
+                height: '46px',
+                borderRadius: '16px',
+                backgroundColor: '#fce7f3',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '22px',
-                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.25)'
+                fontSize: '26px',
+                boxShadow: '0 4px 12px rgba(236, 72, 153, 0.2)',
+                border: '2px solid #fbcfe8'
               }}
             >
-              🥗
+              🌸
             </div>
             <div>
-              <h1 style={{ fontSize: '19px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.4px', margin: 0 }}>
-                FreshTrack
+              <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#831843', letterSpacing: '-0.3px', margin: 0 }}>
+                Freshy
               </h1>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-                Smart Food & Fridge Freshness Assistant
+              <p style={{ fontSize: '12px', color: '#be185d', margin: 0, fontWeight: '600' }}>
+                Your cute fridge buddy & snack tracker ✨
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span
               style={{
                 fontSize: '13px',
-                color: '#64748b',
-                backgroundColor: '#f1f5f9',
-                padding: '6px 14px',
+                color: '#be185d',
+                backgroundColor: '#fdf2f8',
+                padding: '8px 18px',
                 borderRadius: '20px',
-                fontWeight: '600'
+                fontWeight: '700',
+                border: '1.5px solid #fce7f3',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
-              🧊 {inventory.length} items in fridge
+              <span>🧁</span> {inventory.length} treats inside
             </span>
           </div>
         </div>
       </header>
 
-      {/* Main Experience */}
-      <main style={{ maxWidth: '1240px', margin: '28px auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        {/* Friendly Hero / Photo Action Bar */}
+      {/* Main Page Layout */}
+      <main style={{ maxWidth: '1240px', margin: '28px auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '26px' }}>
+        {/* Cute Upload Banner */}
         <div
           style={{
             backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            padding: '24px',
-            border: '1px solid #f1f5f9',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)',
+            borderRadius: '24px',
+            padding: '24px 28px',
+            border: '2px solid #fce7f3',
+            boxShadow: '0 10px 25px rgba(244, 114, 182, 0.08)',
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
@@ -162,43 +165,43 @@ export default function App() {
           }}
         >
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.3px', margin: 0 }}>
-              Scan Fridge Groceries
+            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#831843', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>Snap Your Fridge Shelves</span> 📸✨
             </h2>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
-              Take or upload a quick photo of your fridge shelf. We'll identify items and tell you how long they last.
+            <p style={{ fontSize: '14px', color: '#9d4c6d', margin: '4px 0 0' }}>
+              Take a quick photo of your goodies and we'll remember when they expire so nothing goes bad!
             </p>
           </div>
 
           <label
             style={{
-              backgroundColor: '#2563eb',
+              backgroundColor: '#ec4899',
               color: '#ffffff',
-              padding: '11px 22px',
-              borderRadius: '12px',
+              padding: '12px 24px',
+              borderRadius: '20px',
               fontSize: '14px',
               fontWeight: '700',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+              boxShadow: '0 6px 16px rgba(236, 72, 153, 0.35)',
               transition: 'all 0.15s ease'
             }}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#1d4ed8')}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#2563eb')}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#db2777')}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#ec4899')}
           >
-            <span>📷</span> Upload New Photo
+            <span>✨</span> Take / Upload Photo
             <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
           </label>
         </div>
 
-        {/* 2-Column Split: Image on Left, Review on Right */}
+        {/* 2-Column: Photo & Review */}
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
           <div>
-            <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: '#475569' }}>
-                Your Photo (Click any highlighted item)
+            <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: '#831843', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🎀 Tap any item on the photo</span>
               </span>
             </div>
             <BoundingBoxOverlay
@@ -223,7 +226,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Fridge Digital Inventory */}
+        {/* Cute Fridge Inventory */}
         <InventoryDashboard
           items={inventory}
           onRemoveItem={handleRemoveInventoryItem}
