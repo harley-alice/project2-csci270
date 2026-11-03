@@ -2,59 +2,60 @@ import React, { useState } from 'react';
 import BoundingBoxOverlay from './components/BoundingBoxOverlay';
 import HumanInTheLoopReview from './components/HumanInTheLoopReview';
 import InventoryDashboard from './components/InventoryDashboard';
-import { MOCK_DETECTIONS } from './mockData';
+import { MOCK_DETECTIONS, FOOD_METADATA } from './mockData';
 
-// Placeholder stock fridge photo for initial testing
-const SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1000&q=80';
+const SAMPLE_FRIDGE = 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80';
 
 export default function App() {
-  const [imageSrc, setImageSrc] = useState(SAMPLE_IMAGE);
+  const [imageSrc, setImageSrc] = useState(SAMPLE_FRIDGE);
   const [detections, setDetections] = useState(MOCK_DETECTIONS);
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.50);
   const [selectedId, setSelectedId] = useState(null);
+
+  // Digital fridge state
   const [inventory, setInventory] = useState([
-    { id: 'inv-1', label: 'yogurt', daysRemaining: 4, dateAdded: 'Nov 1, 2026' },
-    { id: 'inv-2', label: 'bacon', daysRemaining: 1, dateAdded: 'Oct 30, 2026' }
+    { id: 'inv-1', label: 'milk', daysRemaining: 6, dateAdded: 'Nov 1' },
+    { id: 'inv-2', label: 'chicken', daysRemaining: 1, dateAdded: 'Oct 31' },
+    { id: 'inv-3', label: 'spinach', daysRemaining: 3, dateAdded: 'Nov 1' }
   ]);
 
-  // Handle local image upload
+  // Handle image upload from user camera / gallery
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setImageSrc(url);
       setSelectedId(null);
-      // In production, Alice will call CJ's FastAPI endpoint: POST /detect
-      // For now, reset detections to mock set to demonstrate interactive UI
-      setDetections(MOCK_DETECTIONS.map(d => ({ ...d, status: 'pending' })));
+      // Reset detections with pending state
+      setDetections(MOCK_DETECTIONS.map((d) => ({ ...d, status: 'pending' })));
     }
   };
 
-  // Human-in-the-loop: Update detection label or status
   const handleUpdateDetection = (id, changes) => {
     setDetections((prev) =>
       prev.map((det) => (det.id === id ? { ...det, ...changes } : det))
     );
 
-    // If accepted, also sync into digital inventory
+    // If marked as accepted, add to fridge inventory
     if (changes.status === 'accepted') {
-      const det = detections.find(d => d.id === id);
-      if (det && !inventory.some(item => item.id === `inv-${id}`)) {
-        setInventory(prev => [
+      const det = detections.find((d) => d.id === id);
+      if (det) {
+        const foodKey = changes.label || det.label;
+        const meta = FOOD_METADATA[foodKey] || { defaultDays: 5 };
+        setInventory((prev) => [
           ...prev,
           {
-            id: `inv-${id}`,
-            label: changes.label || det.label,
-            daysRemaining: det.suggestedShelfLifeDays ?? 5,
+            id: `inv-${Date.now()}-${id}`,
+            label: foodKey,
+            daysRemaining: meta.defaultDays,
             dateAdded: 'Today',
-            userCorrected: changes.userCorrected || det.userCorrected
+            userCorrected: changes.userCorrected
           }
         ]);
       }
     }
   };
 
-  // Accept all valid items currently visible above the confidence threshold
   const handleAcceptAllAboveThreshold = () => {
     const visible = detections.filter(
       (d) => d.confidence >= confidenceThreshold && d.status !== 'rejected'
@@ -68,19 +69,17 @@ export default function App() {
       )
     );
 
-    const newInventoryItems = visible.map((det) => ({
-      id: `inv-${det.id}`,
-      label: det.label,
-      daysRemaining: det.suggestedShelfLifeDays ?? 5,
-      dateAdded: 'Today',
-      userCorrected: det.userCorrected
-    }));
-
-    setInventory((prev) => {
-      const existingIds = new Set(prev.map(item => item.id));
-      const filtered = newInventoryItems.filter(item => !existingIds.has(item.id));
-      return [...prev, ...filtered];
+    const newItems = visible.map((det) => {
+      const meta = FOOD_METADATA[det.label] || { defaultDays: 5 };
+      return {
+        id: `inv-${Date.now()}-${det.id}`,
+        label: det.label,
+        daysRemaining: meta.defaultDays,
+        dateAdded: 'Today'
+      };
     });
+
+    setInventory((prev) => [...prev, ...newItems]);
   };
 
   const handleRemoveInventoryItem = (id) => {
@@ -88,58 +87,120 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      {/* Top Navbar */}
-      <header style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '16px 32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '700', letterSpacing: '-0.5px' }}>
-              FreshTrack AI
-            </h1>
-            <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#94a3b8' }}>
-              CSCI 270: Computer Vision & USDA FoodKeeper Expiration Predictor
-            </p>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', color: '#1e293b' }}>
+      {/* Friendly Top Navigation */}
+      <header
+        style={{
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #f1f5f9',
+          padding: '16px 28px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+        }}
+      >
+        <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                backgroundColor: '#10b981',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '22px',
+                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.25)'
+              }}
+            >
+              🥗
+            </div>
+            <div>
+              <h1 style={{ fontSize: '19px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.4px', margin: 0 }}>
+                FreshTrack
+              </h1>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
+                Smart Food & Fridge Freshness Assistant
+              </p>
+            </div>
           </div>
-          <div style={{ fontSize: '13px', backgroundColor: '#1e293b', padding: '6px 12px', borderRadius: '6px', border: '1px solid #334155' }}>
-            <span>Branch: <code>alice/frontend-setup</code></span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span
+              style={{
+                fontSize: '13px',
+                color: '#64748b',
+                backgroundColor: '#f1f5f9',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontWeight: '600'
+              }}
+            >
+              🧊 {inventory.length} items in fridge
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main style={{ maxWidth: '1200px', margin: '24px auto', padding: '0 24px' }}>
-        {/* Upload Control */}
-        <div style={{ backgroundColor: '#ffffff', padding: '16px 20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Main Experience */}
+      <main style={{ maxWidth: '1240px', margin: '28px auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+        {/* Friendly Hero / Photo Action Bar */}
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            padding: '24px',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '16px'
+          }}
+        >
           <div>
-            <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1e293b' }}>
-              Fridge Photo Scanner
+            <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.3px', margin: 0 }}>
+              Scan Fridge Groceries
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#64748b' }}>
-              Upload or snap a fridge photo to run YOLO object detection and USDA FoodKeeper matching.
+            <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0' }}>
+              Take or upload a quick photo of your fridge shelf. We'll identify items and tell you how long they last.
             </p>
           </div>
+
           <label
             style={{
               backgroundColor: '#2563eb',
               color: '#ffffff',
-              padding: '8px 16px',
-              borderRadius: '6px',
+              padding: '11px 22px',
+              borderRadius: '12px',
               fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer'
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+              transition: 'all 0.15s ease'
             }}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#1d4ed8')}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#2563eb')}
           >
-            Upload Photo
+            <span>📷</span> Upload New Photo
             <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
           </label>
         </div>
 
-        {/* 2-Column Layout: Visual Detection Canvas & Interactive Review */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', marginBottom: '24px' }}>
+        {/* 2-Column Split: Image on Left, Review on Right */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
           <div>
-            <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: '600', color: '#334155' }}>
-              Detection Canvas & Bounding Box Overlays
-            </h3>
+            <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: '#475569' }}>
+                Your Photo (Click any highlighted item)
+              </span>
+            </div>
             <BoundingBoxOverlay
               imageUrl={imageSrc}
               detections={detections}
@@ -150,9 +211,6 @@ export default function App() {
           </div>
 
           <div>
-            <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: '600', color: '#334155' }}>
-              Human-in-the-Loop Review & Feedback
-            </h3>
             <HumanInTheLoopReview
               detections={detections}
               confidenceThreshold={confidenceThreshold}
@@ -165,13 +223,11 @@ export default function App() {
           </div>
         </div>
 
-        {/* Inventory Section */}
-        <div>
-          <InventoryDashboard
-            items={inventory}
-            onRemoveItem={handleRemoveInventoryItem}
-          />
-        </div>
+        {/* Fridge Digital Inventory */}
+        <InventoryDashboard
+          items={inventory}
+          onRemoveItem={handleRemoveInventoryItem}
+        />
       </main>
     </div>
   );

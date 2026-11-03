@@ -1,10 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
+import { FOOD_METADATA } from '../mockData';
 
-/**
- * BoundingBoxOverlay
- * Renders an image along with YOLO bounding boxes, class labels, and confidence tags.
- * Handles responsive scaling between natural image dimensions and display dimensions.
- */
 export default function BoundingBoxOverlay({
   imageUrl,
   detections,
@@ -12,40 +8,36 @@ export default function BoundingBoxOverlay({
   selectedId,
   onSelectDetection
 }) {
-  const containerRef = useRef(null);
-  const imgRef = useRef(null);
-
-  // Filter based on active confidence slider
   const visibleDetections = detections.filter(
     (d) => d.confidence >= confidenceThreshold && d.status !== 'rejected'
   );
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
       style={{
         position: 'relative',
-        display: 'inline-block',
-        maxWidth: '100%',
-        borderRadius: '8px',
+        width: '100%',
+        backgroundColor: '#0f172a',
+        borderRadius: '16px',
         overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        backgroundColor: '#1e293b'
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}
     >
       <img
-        ref={imgRef}
         src={imageUrl}
-        alt="Fridge Capture"
+        alt="Fridge Interior"
         style={{
           display: 'block',
           width: '100%',
           maxHeight: '520px',
-          objectFit: 'contain'
+          objectFit: 'contain',
+          userSelect: 'none'
         }}
       />
 
-      {/* SVG overlay for drawing YOLO bounding boxes */}
       <svg
         style={{
           position: 'absolute',
@@ -60,60 +52,62 @@ export default function BoundingBoxOverlay({
       >
         {visibleDetections.map((det) => {
           const [ymin, xmin, ymax, xmax] = det.bbox;
-          // Scale to 0-1000 coordinate space
           const x = xmin * 1000;
           const y = ymin * 1000;
           const width = (xmax - xmin) * 1000;
           const height = (ymax - ymin) * 1000;
 
           const isSelected = selectedId === det.id;
-          const isLowConf = det.confidence < 0.60;
-          const isJar = det.label.toLowerCase() === 'jar';
+          const meta = FOOD_METADATA[det.label] || { name: det.label, emoji: '🥗' };
+          const isWarning = det.label === 'jar' || det.confidence < 0.60;
 
-          // Color scheme:
-          // Amber for low confidence or jar needing attention, green for high confidence, blue for selected
-          let strokeColor = isLowConf || isJar ? '#f59e0b' : '#10b981';
-          if (isSelected) strokeColor = '#3b82f6';
+          // Norman Affordance Colors: warm amber for items needing user check, calm emerald for good, vibrant indigo for selected
+          const strokeColor = isSelected ? '#3b82f6' : isWarning ? '#f59e0b' : '#10b981';
+          const badgeBg = isSelected ? '#2563eb' : isWarning ? '#d97706' : '#059669';
+
+          const labelText = `${meta.emoji} ${meta.name}`;
+          const badgeWidth = Math.max(110, labelText.length * 9.5 + 40);
 
           return (
-            <g 
+            <g
               key={det.id}
               style={{ pointerEvents: 'all', cursor: 'pointer' }}
               onClick={() => onSelectDetection(det.id)}
             >
-              {/* Bounding rectangle */}
+              {/* Highlight background on hover/selection */}
               <rect
                 x={x}
                 y={y}
                 width={width}
                 height={height}
-                fill={isSelected ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0, 0, 0, 0.05)'}
+                fill={isSelected ? 'rgba(59, 130, 246, 0.22)' : 'rgba(0, 0, 0, 0.08)'}
                 stroke={strokeColor}
                 strokeWidth={isSelected ? 4 : 2.5}
-                strokeDasharray={isLowConf ? '6,3' : 'none'}
-                rx="4"
+                strokeDasharray={isWarning ? '6,4' : 'none'}
+                rx="6"
               />
 
-              {/* Tag / Badge background */}
+              {/* Pill badge */}
               <rect
                 x={x}
-                y={Math.max(0, y - 26)}
-                width={Math.max(80, (det.label.length * 9) + 55)}
-                height={26}
-                fill={strokeColor}
-                rx="3"
+                y={Math.max(4, y - 30)}
+                width={badgeWidth}
+                height={30}
+                fill={badgeBg}
+                rx="6"
+                filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.25))"
               />
 
-              {/* Tag text */}
+              {/* Item text */}
               <text
-                x={x + 6}
-                y={Math.max(0, y - 26) + 18}
+                x={x + 10}
+                y={Math.max(4, y - 30) + 20}
                 fill="#ffffff"
                 fontSize="14"
-                fontWeight="600"
-                fontFamily="sans-serif"
+                fontWeight="700"
+                fontFamily="'Plus Jakarta Sans', sans-serif"
               >
-                {det.label} {Math.round(det.confidence * 100)}%
+                {labelText}
               </text>
             </g>
           );
