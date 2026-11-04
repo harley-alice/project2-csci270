@@ -1,0 +1,29 @@
+:root {
+  /*Theme Colors */
+  --color-error: #BA3801;
+  --color-attention: #BA3801;
+  --color-accent: #FFEC89;
+  --color-primary-accent: #4A69B3;
+  --color-bg: #ffffff;
+  --color-text: #000000;
+  --color-border: #000000;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
