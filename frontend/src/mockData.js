@@ -9,8 +9,10 @@ export const FOOD_CLASSES = [
 ];
 
 export const INITIAL_DETECTIONS = [
-  { id: '1', label: 'milk', days: 7, bbox: [0.22, 0.14, 0.76, 0.40] },
-  { id: '2', label: 'apple', days: 21, bbox: [0.45, 0.42, 0.65, 0.58] },
-  { id: '3', label: 'chicken', days: 2, bbox: [0.58, 0.62, 0.90, 0.94] },
-  { id: '4', label: 'jar', days: 14, bbox: [0.12, 0.68, 0.38, 0.84] }
+  { id: '1', label: 'milk', confidence: 0.94, days: 7, bbox: [0.22, 0.14, 0.76, 0.40] },
+  { id: '2', label: 'apple', confidence: 0.82, days: 21, bbox: [0.45, 0.42, 0.65, 0.58] },
+  { id: '3', label: 'chicken', confidence: 0.52, days: 2, bbox: [0.58, 0.62, 0.90, 0.94] },
+  { id: '4', label: 'jar', confidence: 0.68, days: 14, bbox: [0.12, 0.68, 0.38, 0.84] },
+  { id: '5', label: 'cheese', confidence: 0.45, days: 14, bbox: [0.65, 0.18, 0.85, 0.35] }
 ];
+
