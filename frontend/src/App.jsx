@@ -4,24 +4,15 @@ import { FOOD_CLASSES, INITIAL_DETECTIONS } from './mockData';
 const SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80';
 
 export default function App() {
-  // Steps: 1 = Capture, 2 = Confirm items, 3 = Processing, 4 = Tracking
+  // Steps: 1 = Capture, 2 = Review, 3 = Processing, 4 = Inventory
   const [step, setStep] = useState(1);
   const [image, setImage] = useState(SAMPLE_IMAGE);
   const [rawDetections, setRawDetections] = useState(INITIAL_DETECTIONS);
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.50);
-  const [feedbackQueue, setFeedbackQueue] = useState([]);
-  const [feedbackToast, setFeedbackToast] = useState(null);
   const [tracking, setTracking] = useState([
     { id: 't1', label: 'yogurt', days: 5 },
-    { id: 't2', label: 'eggs', days: 12 }
+    { id: 't2', label: 'egg', days: 12 }
   ]);
-
-  const showToast = (message) => {
-    setFeedbackToast(message);
-    setTimeout(() => {
-      setFeedbackToast(null);
-    }, 3200);
-  };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -31,92 +22,75 @@ export default function App() {
     }
   };
 
-  // Log active learning feedback event
-  const logFeedback = (feedbackEvent) => {
-    setFeedbackQueue((prev) => [...prev, feedbackEvent]);
-
-    // Send payload to backend /feedback endpoint (graceful fallback if backend offline)
+  // Silently record feedback payload for backend retraining
+  const sendFeedbackPayload = (payload) => {
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(feedbackEvent)
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Feedback endpoint unavailable');
-        showToast(`Logged feedback for active learning (${feedbackEvent.type})`);
-      })
-      .catch(() => {
-        // Fallback for offline/mock development
-        console.log('[Active Learning Payload Logged]:', feedbackEvent);
-        showToast(`Recorded "${feedbackEvent.type}" event for retraining dataset`);
-      });
+      body: JSON.stringify(payload)
+    }).catch(() => {
+      // Graceful offline fallback
+      console.log('[Model Feedback Logged]:', payload);
+    });
   };
 
   const updateLabel = (id, newLabel) => {
     const targetItem = rawDetections.find((it) => it.id === id);
     if (!targetItem || targetItem.label === newLabel) return;
 
-    const originalLabel = targetItem.originalLabel || targetItem.label;
-
-    logFeedback({
+    sendFeedbackPayload({
       timestamp: new Date().toISOString(),
       type: 'user_correction',
-      image_source: image.startsWith('data:') ? 'camera_upload' : 'sample_or_url',
+      image_source: image.startsWith('data:') ? 'upload' : 'sample',
       detection_id: id,
       predicted_label: targetItem.label,
       corrected_label: newLabel,
       confidence: targetItem.confidence ?? 1.0,
-      bbox_normalized: targetItem.bbox // [ymin, xmin, ymax, xmax]
+      bbox: targetItem.bbox
     });
 
     setRawDetections((prev) =>
       prev.map((it) =>
         it.id === id
-          ? {
-              ...it,
-              label: newLabel,
-              originalLabel,
-              userEdited: true
-            }
+          ? { ...it, label: newLabel, userEdited: true }
           : it
       )
     );
   };
 
-  const removeFalsePositive = (id) => {
+  const removeItem = (id) => {
     const targetItem = rawDetections.find((it) => it.id === id);
     if (targetItem) {
-      logFeedback({
+      sendFeedbackPayload({
         timestamp: new Date().toISOString(),
         type: 'false_positive_rejected',
-        image_source: image.startsWith('data:') ? 'camera_upload' : 'sample_or_url',
+        image_source: image.startsWith('data:') ? 'upload' : 'sample',
         detection_id: id,
         predicted_label: targetItem.label,
         corrected_label: null,
         confidence: targetItem.confidence ?? 1.0,
-        bbox_normalized: targetItem.bbox
+        bbox: targetItem.bbox
       });
     }
 
     setRawDetections((prev) => prev.filter((it) => it.id !== id));
   };
 
-  // Filter items dynamically by the confidence threshold unless manually edited by user
   const visibleItems = rawDetections.filter(
     (it) => it.userEdited || (it.confidence ?? 1.0) >= confidenceThreshold
   );
 
-  const runAiAndTrack = () => {
+  const confirmAndTrack = () => {
     setStep(3);
     setTimeout(() => {
-      const newTracked = visibleItems.map((it) => ({
+      const newItems = visibleItems.map((it) => ({
         id: String(Date.now() + Math.random()),
         label: it.label,
         days: it.days
       }));
-      setTracking([...tracking, ...newTracked]);
+      setTracking([...tracking, ...newItems]);
       setStep(4);
-    }, 1200);
+    }, 900);
   };
 
   const removeTracked = (id) => {
@@ -124,42 +98,34 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: '760px', margin: '40px auto', padding: '0 20px', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>
-      <header style={{ borderBottom: '1px solid #000', paddingBottom: '16px', marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '-0.5px' }}>Fridge Tracker</h1>
-          <span style={{ fontSize: '12px', color: '#666' }}>CSCI 270 AI Vision & Active Learning Pipeline</span>
-        </div>
-        <span style={{ fontSize: '13px', border: '1px solid #000', padding: '2px 8px', borderRadius: '12px' }}>
-          {feedbackQueue.length} Retraining Samples Logged
-        </span>
+    <div style={{ maxWidth: '720px', margin: '48px auto', padding: '0 24px' }}>
+      <header style={{ borderBottom: '2px solid var(--color-border)', paddingBottom: '16px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px' }}>Fridge Tracker</h1>
+        <span style={{ fontSize: '13px', color: '#555' }}>Food Safety & Inventory</span>
       </header>
 
-      {/* Floating feedback alert toast */}
-      {feedbackToast && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: 'var(--color-primary-accent, #4A69B3)',
-          color: '#fff',
-          padding: '12px 18px',
-          borderRadius: '4px',
-          fontSize: '13px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 1000
-        }}>
-          ✓ {feedbackToast}
-        </div>
-      )}
-
-      {/* Step 1: Video / Photo Capture */}
+      {/* Step 1: Capture / Upload */}
       {step === 1 && (
         <section>
-          <div style={{ border: '1px dashed #000', padding: '60px 20px', textAlign: 'center', marginBottom: '24px' }}>
-            <p style={{ marginBottom: '16px', fontSize: '14px' }}>Take a picture or record video of your fridge.</p>
-            <label style={{ display: 'inline-block', border: '1px solid #000', background: '#000', color: '#fff', padding: '10px 20px', fontSize: '13px', cursor: 'pointer' }}>
-              Upload Image or Video
+          <div style={{
+            border: '2px dashed var(--color-border)',
+            padding: '64px 24px',
+            textAlign: 'center',
+            marginBottom: '24px',
+            background: '#fafafa'
+          }}>
+            <p style={{ marginBottom: '16px', fontSize: '15px' }}>Upload a photo or video of your fridge shelves.</p>
+            <label style={{
+              display: 'inline-block',
+              background: 'var(--color-primary-accent)',
+              color: '#ffffff',
+              padding: '10px 22px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              border: 'none'
+            }}>
+              Select Fridge Photo
               <input type="file" accept="image/*,video/*" onChange={handleFile} style={{ display: 'none' }} />
             </label>
           </div>
@@ -170,66 +136,67 @@ export default function App() {
                 setRawDetections(INITIAL_DETECTIONS);
                 setStep(2);
               }}
-              style={{ background: 'none', border: '1px solid #000', padding: '8px 16px', fontSize: '12px', cursor: 'pointer' }}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--color-border)',
+                padding: '8px 18px',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
             >
-              Use sample image
+              Use demo fridge image
             </button>
           </div>
         </section>
       )}
 
-      {/* Step 2: Confirm Items & Human-in-the-Loop Threshold Tuning */}
+      {/* Step 2: Review Scanned Items */}
       {step === 2 && (
         <section>
-          {/* Confidence Slider Control */}
+          {/* Sensitivity / Detection Slider */}
           <div style={{
-            background: '#fafafa',
-            border: '1px solid #000',
-            padding: '16px 20px',
+            border: '1px solid var(--color-border)',
+            padding: '14px 18px',
             marginBottom: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
+            background: '#fafafa'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label htmlFor="conf-slider" style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                AI Confidence Threshold Filter:
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label htmlFor="detection-slider" style={{ fontSize: '13px', fontWeight: 600 }}>
+                Detection Sensitivity:
               </label>
-              <span style={{
-                fontSize: '13px',
-                fontFamily: 'monospace',
-                background: (confidenceThreshold >= 0.60) ? '#eee' : 'var(--color-accent, #FFEC89)',
-                padding: '2px 6px',
-                border: '1px solid #ccc'
-              }}>
-                {Math.round(confidenceThreshold * 100)}%
+              <span style={{ fontSize: '12px', color: '#444' }}>
+                Showing {visibleItems.length} of {rawDetections.length} items
               </span>
             </div>
             <input
-              id="conf-slider"
+              id="detection-slider"
               type="range"
               min="0.20"
               max="0.95"
               step="0.05"
               value={confidenceThreshold}
               onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
-              style={{ width: '100%', cursor: 'pointer' }}
+              style={{ width: '100%', cursor: 'pointer', accentColor: 'var(--color-primary-accent)' }}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#666' }}>
-              <span>Low (show subtle detections)</span>
-              <span>Showing {visibleItems.length} of {rawDetections.length} candidate boxes</span>
-              <span>High (strict certainty)</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#666', marginTop: '4px' }}>
+              <span>Show more items</span>
+              <span>Only high certainty</span>
             </div>
           </div>
 
-          {/* Bounding Box Image Preview */}
-          <div style={{ position: 'relative', border: '1px solid #000', marginBottom: '24px', background: '#000' }}>
+          {/* Photo with Bounding Boxes */}
+          <div style={{ position: 'relative', border: '1px solid var(--color-border)', marginBottom: '24px', background: '#000000' }}>
             <img src={image} alt="Fridge" style={{ display: 'block', width: '100%', maxHeight: '420px', objectFit: 'contain' }} />
             <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox="0 0 1000 1000" preserveAspectRatio="none">
               {visibleItems.map((it) => {
                 const [ymin, xmin, ymax, xmax] = it.bbox;
-                const isLowConf = (it.confidence ?? 1.0) < 0.60;
-                const strokeColor = it.userEdited ? '#FFEC89' : (isLowConf ? '#BA3801' : '#4A69B3');
+                const isUnsure = (it.confidence ?? 1.0) < 0.60;
+                const strokeColor = it.userEdited
+                  ? 'var(--color-accent)'
+                  : isUnsure
+                  ? 'var(--color-attention)'
+                  : 'var(--color-primary-accent)';
+
                 return (
                   <g key={it.id}>
                     <rect
@@ -240,24 +207,22 @@ export default function App() {
                       fill="none"
                       stroke={strokeColor}
                       strokeWidth="3"
-                      strokeDasharray={isLowConf && !it.userEdited ? "4 3" : "none"}
                     />
                     <rect
                       x={xmin * 1000}
-                      y={Math.max(0, ymin * 1000 - 20)}
-                      width={Math.max(80, (it.label.length * 9) + 45)}
-                      height="20"
+                      y={Math.max(0, ymin * 1000 - 22)}
+                      width={Math.max(70, it.label.length * 10 + 20)}
+                      height="22"
                       fill={strokeColor}
                     />
                     <text
-                      x={xmin * 1000 + 4}
-                      y={Math.max(14, ymin * 1000 - 5)}
-                      fill={it.userEdited ? '#000' : '#fff'}
+                      x={xmin * 1000 + 6}
+                      y={Math.max(16, ymin * 1000 - 6)}
+                      fill={it.userEdited ? '#000000' : '#ffffff'}
                       fontSize="12"
                       fontWeight="bold"
-                      fontFamily="Helvetica"
                     >
-                      {it.label} {it.confidence ? `(${Math.round(it.confidence * 100)}%)` : ''}
+                      {it.label}
                     </text>
                   </g>
                 );
@@ -265,88 +230,81 @@ export default function App() {
             </svg>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 'bold' }}>
-              Human-in-the-Loop Review ({visibleItems.length} active detections)
-            </h2>
-            <span style={{ fontSize: '12px', color: '#666' }}>
-              Corrections automatically log for model fine-tuning
-            </span>
+          <div style={{ marginBottom: '12px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Review Detected Items</h2>
+            <p style={{ fontSize: '13px', color: '#555', marginTop: '2px' }}>
+              Confirm your items below. If something was identified incorrectly, choose the correct food from the dropdown.
+            </p>
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '13px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #000', textAlign: 'left', fontSize: '12px', color: '#444' }}>
-                <th style={{ padding: '6px 0' }}>Class Detection</th>
-                <th style={{ padding: '6px 0' }}>Certainty</th>
-                <th style={{ padding: '6px 0' }}>Status / Action</th>
-                <th style={{ padding: '6px 0', textAlign: 'right' }}>False Positive</th>
+              <tr style={{ borderBottom: '1px solid var(--color-border)', textAlign: 'left', fontSize: '12px', color: '#555' }}>
+                <th style={{ padding: '8px 0', width: '42%' }}>Item</th>
+                <th style={{ padding: '8px 0', width: '24%' }}>Status</th>
+                <th style={{ padding: '8px 0', width: '20%' }}>Est. Shelf Life</th>
+                <th style={{ padding: '8px 0', textAlign: 'right', width: '14%' }}></th>
               </tr>
             </thead>
             <tbody>
               {visibleItems.map((it) => {
                 const conf = it.confidence ?? 1.0;
-                const isLow = conf < 0.60;
+                const isUnsure = conf < 0.60;
+
                 return (
-                  <tr key={it.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '10px 0' }}>
+                  <tr key={it.id} style={{ borderBottom: '1px solid #e5e5e5' }}>
+                    <td style={{ padding: '12px 0' }}>
                       <select
                         value={it.label}
                         onChange={(e) => updateLabel(it.id, e.target.value)}
                         style={{
-                          border: it.userEdited ? '2px solid var(--color-primary-accent, #4A69B3)' : '1px solid #000',
-                          padding: '4px 8px',
+                          border: it.userEdited
+                            ? '2px solid var(--color-primary-accent)'
+                            : '1px solid var(--color-border)',
+                          padding: '6px 10px',
                           fontSize: '13px',
-                          background: it.userEdited ? '#f0f4ff' : '#fff',
-                          fontWeight: it.userEdited ? 'bold' : 'normal'
+                          background: it.userEdited ? '#f4f6fb' : '#ffffff',
+                          fontWeight: it.userEdited ? 600 : 400,
+                          width: '88%'
                         }}
                       >
                         {FOOD_CLASSES.map((c) => (
                           <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
-                      {it.userEdited && (
-                        <span style={{ fontSize: '11px', color: 'var(--color-primary-accent, #4A69B3)', marginLeft: '8px' }}>
-                          (Corrected)
-                        </span>
-                      )}
                     </td>
-                    <td style={{ padding: '10px 0' }}>
-                      <span style={{
-                        display: 'inline-block',
-                        padding: '2px 6px',
-                        fontSize: '11px',
-                        border: '1px solid #ccc',
-                        background: isLow ? '#ffebee' : '#f5f5f5',
-                        color: isLow ? 'var(--color-attention, #BA3801)' : '#000',
-                        fontWeight: isLow ? 'bold' : 'normal'
-                      }}>
-                        {Math.round(conf * 100)}% {isLow ? '⚠️ Review' : ''}
-                      </span>
-                    </td>
-                    <td style={{ padding: '10px 0', fontSize: '12px', color: '#555' }}>
-                      {it.label === 'jar' ? (
-                        <span style={{ color: 'var(--color-attention, #BA3801)', fontWeight: '500' }}>
-                          Needs specific food choice
-                        </span>
+
+                    <td style={{ padding: '12px 0', fontSize: '12px' }}>
+                      {it.userEdited ? (
+                        <span style={{ color: 'var(--color-primary-accent)', fontWeight: 600 }}>Edited</span>
+                      ) : isUnsure ? (
+                        <span style={{ color: 'var(--color-attention)', fontWeight: 600 }}>Unsure ({Math.round(conf * 100)}%)</span>
                       ) : (
-                        `Est. shelf life: ${it.days} days`
+                        <span style={{ color: '#555' }}>Detected</span>
                       )}
                     </td>
-                    <td style={{ padding: '10px 0', textAlign: 'right' }}>
+
+                    <td style={{ padding: '12px 0', fontSize: '13px', color: '#333' }}>
+                      {it.label === 'jar' ? (
+                        <span style={{ color: 'var(--color-attention)' }}>Select contents</span>
+                      ) : (
+                        `${it.days} days`
+                      )}
+                    </td>
+
+                    <td style={{ padding: '12px 0', textAlign: 'right' }}>
                       <button
-                        onClick={() => removeFalsePositive(it.id)}
+                        onClick={() => removeItem(it.id)}
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: 'var(--color-error, #BA3801)',
+                          color: 'var(--color-error)',
                           textDecoration: 'underline',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
-                        title="Reject bounding box & log as false positive"
                       >
-                        Reject Box
+                        Remove
                       </button>
                     </td>
                   </tr>
@@ -354,8 +312,8 @@ export default function App() {
               })}
               {visibleItems.length === 0 && (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center', padding: '24px 0', color: '#888' }}>
-                    No detections match this confidence threshold. Lower the slider to see lower-certainty boxes.
+                  <td colSpan="4" style={{ textAlign: 'center', padding: '32px 0', color: '#666' }}>
+                    No items match this sensitivity level. Drag the slider to the left to show more items.
                   </td>
                 </tr>
               )}
@@ -364,85 +322,104 @@ export default function App() {
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
-              onClick={runAiAndTrack}
+              onClick={confirmAndTrack}
               disabled={visibleItems.length === 0}
               style={{
-                background: visibleItems.length === 0 ? '#999' : '#000',
-                color: '#fff',
-                border: '1px solid #000',
-                padding: '10px 20px',
-                fontSize: '13px',
+                background: visibleItems.length === 0 ? '#999' : 'var(--color-primary-accent)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '11px 22px',
+                fontSize: '14px',
+                fontWeight: 600,
                 cursor: visibleItems.length === 0 ? 'not-allowed' : 'pointer'
               }}
             >
-              Confirm and Track ({visibleItems.length} items)
+              Add to Fridge Inventory ({visibleItems.length})
             </button>
             <button
               onClick={() => setStep(1)}
-              style={{ background: '#fff', color: '#000', border: '1px solid #000', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
+              style={{
+                background: '#ffffff',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                padding: '11px 18px',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
             >
-              Retake
+              Back
             </button>
           </div>
         </section>
       )}
 
-      {/* Step 3: Processing */}
+      {/* Step 3: Loading */}
       {step === 3 && (
-        <section style={{ textAlign: 'center', padding: '60px 0' }}>
-          <p style={{ fontSize: '14px', marginBottom: '8px' }}>Processing FoodKeeper storage guidelines & shelf life...</p>
-          <p style={{ fontSize: '12px', color: '#666' }}>Applying USDA expiration rules to confirmed inventory</p>
+        <section style={{ textAlign: 'center', padding: '80px 0' }}>
+          <p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '6px' }}>Updating fridge inventory...</p>
+          <p style={{ fontSize: '13px', color: '#666' }}>Applying USDA FoodKeeper guidelines.</p>
         </section>
       )}
 
-      {/* Step 4: Tracking Output */}
+      {/* Step 4: Fridge Inventory */}
       {step === 4 && (
         <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '14px', fontWeight: 'bold' }}>Active Refrigerator Inventory ({tracking.length} items)</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Current Fridge Inventory ({tracking.length} items)</h2>
             <button
               onClick={() => setStep(1)}
-              style={{ background: '#000', color: '#fff', border: '1px solid #000', padding: '6px 12px', fontSize: '12px', cursor: 'pointer' }}
+              style={{
+                background: 'var(--color-primary-accent)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 16px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
             >
-              + Scan New Photo
+              + Scan More Food
             </button>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: '32px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #000', textAlign: 'left' }}>
-                <th style={{ padding: '8px 0' }}>Item</th>
-                <th style={{ padding: '8px 0' }}>Days Remaining</th>
-                <th style={{ padding: '8px 0' }}>Safety Status</th>
-                <th style={{ padding: '8px 0', textAlign: 'right' }}>Action</th>
+              <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left', fontSize: '12px', color: '#555' }}>
+                <th style={{ padding: '8px 0', width: '45%' }}>Food Item</th>
+                <th style={{ padding: '8px 0', width: '30%' }}>Shelf Life Remaining</th>
+                <th style={{ padding: '8px 0', textAlign: 'right', width: '25%' }}></th>
               </tr>
             </thead>
             <tbody>
               {tracking.map((t) => {
                 const isUrgent = t.days <= 3;
                 return (
-                  <tr key={t.id} style={{ borderBottom: '1px solid #ddd' }}>
-                    <td style={{ padding: '10px 0', textTransform: 'capitalize', fontWeight: 'bold' }}>{t.label}</td>
-                    <td style={{ padding: '10px 0' }}>{t.days} days</td>
-                    <td style={{ padding: '10px 0' }}>
+                  <tr key={t.id} style={{ borderBottom: '1px solid #e5e5e5' }}>
+                    <td style={{ padding: '12px 0', textTransform: 'capitalize', fontWeight: 600 }}>
+                      {t.label}
+                    </td>
+                    <td style={{ padding: '12px 0' }}>
                       <span style={{
-                        display: 'inline-block',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        background: isUrgent ? '#ffebee' : '#e8f5e9',
-                        color: isUrgent ? 'var(--color-attention, #BA3801)' : '#2e7d32',
-                        fontWeight: 'bold'
+                        color: isUrgent ? 'var(--color-attention)' : 'inherit',
+                        fontWeight: isUrgent ? 700 : 400
                       }}>
-                        {isUrgent ? 'Consume Soon' : 'Fresh'}
+                        {t.days} {t.days === 1 ? 'day' : 'days'}
+                        {isUrgent ? ' (use soon)' : ''}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 0', textAlign: 'right' }}>
+                    <td style={{ padding: '12px 0', textAlign: 'right' }}>
                       <button
                         onClick={() => removeTracked(t.id)}
-                        style={{ background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', fontSize: '12px' }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          color: '#555'
+                        }}
                       >
-                        Consume / Remove
+                        Remove
                       </button>
                     </td>
                   </tr>
@@ -450,29 +427,10 @@ export default function App() {
               })}
             </tbody>
           </table>
-
-          {/* Active Learning Summary Panel */}
-          {feedbackQueue.length > 0 && (
-            <div style={{ border: '1px solid #ccc', background: '#fafafa', padding: '16px', borderRadius: '4px', fontSize: '12px' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>
-                Active Learning / Human-in-the-Loop Audit Log ({feedbackQueue.length} events logged this session)
-              </h3>
-              <p style={{ color: '#666', marginBottom: '12px' }}>
-                These user annotations are structured for the next model retraining cycle to correct edge cases and reduce false positives:
-              </p>
-              <ul style={{ paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {feedbackQueue.map((item, idx) => (
-                  <li key={idx} style={{ fontFamily: 'monospace' }}>
-                    <strong>[{item.type}]</strong> {item.predicted_label}
-                    {item.corrected_label ? ` ➔ ${item.corrected_label}` : ' (rejected false positive)'} | Conf: {Math.round(item.confidence * 100)}%
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </section>
       )}
     </div>
   );
 }
+
 
