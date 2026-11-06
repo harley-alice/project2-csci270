@@ -51,6 +51,17 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Node / Frontend
+node_modules/
+dist/
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vite/
+
 # Translations
 *.mo
 *.pot
