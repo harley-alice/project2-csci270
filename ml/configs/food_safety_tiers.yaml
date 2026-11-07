@@ -1,0 +1,76 @@
+# Food safety hierarchy
+#
+# defines the food categories and which tier each food belongs to
+
+tiers:
+  tier_1:
+    name: High safety priority
+    description: >
+      Foods for which incorrect storage or handling can present substantial
+      foodborne-illness concerns. Prioritize clear user confirmation and
+      appropriate storage reminders. This tier does not imply that every
+      detected item is raw or unsafe.
+    classes:
+      - beef
+      - chicken
+      - shrimp
+
+  tier_2:
+    name: Refrigeration-sensitive
+    description: >
+      Perishable foods for which refrigeration, product type, processing,
+      and opened status can materially affect recommended storage duration.
+      Retrieve product-specific guidance and request additional details when
+      needed.
+    classes:
+      - bacon
+      - butter
+      - cheese
+      - cream
+      - egg
+      - goat_cheese
+      - ham
+      - milk
+      - yogurt
+
+  tier_3:
+    name: Generally lower acute risk
+    description: >
+      Foods assigned a lower default alert priority in this prototype when
+      properly stored. This tier does not mean risk-free or shelf-stable:
+      some produce requires refrigeration, and raw flour can carry pathogens.
+      Use food-specific storage guidance.
+    classes:
+      - apple
+      - avocado
+      - banana
+      - bell_pepper
+      - blueberries
+      - bread
+      - carrot
+      - chocolate
+      - corn
+      - flour
+      - green_beans
+      - lemon
+      - lime
+      - mango
+      - mushrooms
+      - onion
+      - orange
+      - persimmon
+      - pomegranate
+      - potato
+      - spinach
+      - strawberries
+      - sugar
+      - sweet_potato
+      - tomato
+
+special_categories:
+  - class: jar
+    category: unidentified_container
+    requires_user_confirmation: true
+    description: >
+      A jar is a container rather than a food classification. Ask the user
+      to identify its contents before applying food-specific storage guidance.
