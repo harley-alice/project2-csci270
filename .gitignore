@@ -246,3 +246,9 @@ runs/
 *.pt
 *.zip
 .DS_Store
+
+# Python venv lives in the repo root (this folder is the venv)
+/bin/
+/share/
+/include/
+/pyvenv.cfg
