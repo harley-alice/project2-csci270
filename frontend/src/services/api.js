@@ -1,48 +1,85 @@
 import { INITIAL_DETECTIONS } from '../mockData';
 
-// Toggle this to false when CJ's FastAPI server is running
-const USE_MOCK = true;
-const API_BASE_URL = 'http://localhost:8000';
+// When true, uses local mock detections if the backend is offline/unreachable
+let fallbackToMock = true;
 
 /**
- * Upload an image/blob to YOLO detection endpoint
+ * Upload an image (File or Blob) to YOLO detection endpoint
  */
 export async function detectFridgeItems(imageBlob) {
-  if (USE_MOCK) {
-    // Simulate server latency
-    await new Promise((r) => setTimeout(r, 600));
-    return INITIAL_DETECTIONS;
+  try {
+    const formData = new FormData();
+    formData.append('file', imageBlob, 'fridge_scan.jpg');
+
+    const res = await fetch('/detect', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) throw new Error(`Detection failed with status: ${res.status}`);
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    if (fallbackToMock) {
+      console.warn('[API Service] Backend /detect offline, using local mock detections.');
+      await new Promise((r) => setTimeout(r, 600));
+      return INITIAL_DETECTIONS;
+    }
+    throw err;
   }
-
-  const formData = new FormData();
-  formData.append('file', imageBlob);
-
-  const res = await fetch(`${API_BASE_URL}/detect`, {
-    method: 'POST',
-    body: formData
-  });
-
-  if (!res.ok) throw new Error('Detection failed');
-  return res.json();
 }
 
 /**
  * Send human-in-the-loop correction / false positive payload
  */
 export async function sendFeedback(payload) {
-  if (USE_MOCK) {
-    console.log('[API Service] Feedback logged locally:', payload);
-    return { status: 'logged', id: payload.detection_id };
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error('Failed to record feedback');
+    return await res.json();
+  } catch (err) {
+    // Silently fall back to local logging if server isn't up yet
+    console.log('[API Service] Feedback saved locally:', payload);
+    return { status: 'logged_locally', payload };
   }
+}
 
-  const res = await fetch(`${API_BASE_URL}/api/feedback`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+/**
+ * Fetch user inventory from SQLite backend (or localStorage if offline)
+ */
+export async function getInventory() {
+  try {
+    const res = await fetch('/api/inventory');
+    if (!res.ok) throw new Error('Failed to fetch inventory');
+    return await res.json();
+  } catch (err) {
+    const saved = localStorage.getItem('fridge_inventory');
+    return saved ? JSON.parse(saved) : null;
+  }
+}
 
-  if (!res.ok) throw new Error('Failed to record feedback');
-  return res.json();
+/**
+ * Save confirmed items to backend SQLite (and backup to local storage)
+ */
+export async function saveInventory(items) {
+  localStorage.setItem('fridge_inventory', JSON.stringify(items));
+  try {
+    const res = await fetch('/api/inventory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    });
+    if (!res.ok) throw new Error('Failed to save to backend');
+    return await res.json();
+  } catch (err) {
+    console.log('[API Service] Saved to local browser storage.');
+    return { status: 'saved_locally' };
+  }
 }
 
 /**
