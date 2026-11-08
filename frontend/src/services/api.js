@@ -1,7 +1,11 @@
 import { INITIAL_DETECTIONS } from '../mockData';
 
-// When true, uses local mock detections if the backend is offline/unreachable
-let fallbackToMock = true;
+// When false, throws error instead of silently returning mock detections so failures are visible
+let fallbackToMock = false;
+
+export function setFallbackToMock(enable) {
+  fallbackToMock = enable;
+}
 
 /**
  * Upload an image (File or Blob) to YOLO detection endpoint
@@ -16,7 +20,14 @@ export async function detectFridgeItems(imageBlob) {
       body: formData
     });
 
-    if (!res.ok) throw new Error(`Detection failed with status: ${res.status}`);
+    if (!res.ok) {
+      let errMsg = `Detection failed with status: ${res.status}`;
+      try {
+        const errJson = await res.json();
+        if (errJson && errJson.error) errMsg = errJson.error;
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
     const data = await res.json();
     return data;
   } catch (err) {

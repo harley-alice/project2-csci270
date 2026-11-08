@@ -60,6 +60,9 @@ yarn-error.log*
 .pnpm-debug.log*
 .vite/
 
+# Local testing helpers
+local_test_server.py
+
 .pytest_cache/
 cover/
 
