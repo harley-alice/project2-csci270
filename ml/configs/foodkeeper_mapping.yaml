@@ -1,0 +1,143 @@
+# Maps normalized computer-vision classes to FoodKeeper search terms.
+
+foodkeeper_mapping:
+  beef:
+    search_terms: ["beef"]
+    requires_user_detail: true
+    detail_prompt: "Which type/cut of whole-muscle beef is this?"
+  ground_beef:
+    search_terms: ["ground beef"]
+    requires_user_detail: true
+    detail_prompt: "Is this raw or cooked ground beef?"
+  chicken:
+    search_terms: ["chicken"]
+    requires_user_detail: true
+    detail_prompt: "Is this raw or cooked chicken?"
+  shrimp:
+    search_terms: ["shrimp"]
+    requires_user_detail: true
+    detail_prompt: "Is this raw, cooked, or thawed shrimp?"
+  bacon:
+    search_terms: ["bacon"]
+    requires_user_detail: true
+    detail_prompt: "Is this bacon opened or unopened?"
+  butter:
+    search_terms: ["butter"]
+    requires_user_detail: true
+    detail_prompt: "Is this salted or unsalted butter, and is it opened?"
+  cheese:
+    search_terms: ["cheese"]
+    requires_user_detail: true
+    detail_prompt: "What type of cheese is this (hard, soft, shredded, etc.)?"
+  goat_cheese:
+    search_terms: ["goat cheese"]
+    requires_user_detail: true
+    detail_prompt: "Is this goat cheese soft or aged, and is it opened?"
+  cream:
+    search_terms: ["cream", "heavy cream"]
+    requires_user_detail: true
+    detail_prompt: "What type of cream is this, and is it opened?"
+  egg:
+    search_terms: ["eggs", "egg"]
+    requires_user_detail: true
+    detail_prompt: "Are these shell eggs or a processed egg product?"
+  ham:
+    search_terms: ["ham"]
+    requires_user_detail: true
+    detail_prompt: "What type of ham is this (fresh, cured, deli, cooked, etc.)?"
+  milk:
+    search_terms: ["milk"]
+    requires_user_detail: true
+    detail_prompt: "What type of milk is this, and is it opened?"
+  yogurt:
+    search_terms: ["yogurt", "yoghurt"]
+    requires_user_detail: true
+    detail_prompt: "Is this yogurt opened or unopened?"
+  apple:
+    search_terms: ["apples"]
+    requires_user_detail: false
+  avocado:
+    search_terms: ["avocado"]
+    requires_user_detail: false
+  banana:
+    search_terms: ["bananas", "banana"]
+    requires_user_detail: false
+  bell_pepper:
+    search_terms: ["peppers", "bell pepper"]
+    requires_user_detail: true
+    detail_prompt: "Is the pepper whole or cut?"
+  blueberries:
+    search_terms: ["blueberries"]
+    requires_user_detail: true
+    detail_prompt: "Are the blueberries fresh or cut/processed?"
+  bread:
+    search_terms: ["bread"]
+    requires_user_detail: true
+    detail_prompt: "What kind of bread is this, and is it opened?"
+  carrot:
+    search_terms: ["carrots"]
+    requires_user_detail: true
+    detail_prompt: "Are the carrots whole or cut?"
+  chocolate:
+    search_terms: ["chocolate"]
+    requires_user_detail: true
+    detail_prompt: "What type of chocolate product is this?"
+  corn:
+    search_terms: ["corn"]
+    requires_user_detail: true
+    detail_prompt: "Is the corn fresh, cooked, or canned?"
+  flour:
+    search_terms: ["flour"]
+    requires_user_detail: true
+    detail_prompt: "What type of flour is this?"
+  green_beans:
+    search_terms: ["green beans"]
+    requires_user_detail: true
+    detail_prompt: "Are the green beans fresh, cooked, or canned?"
+  lemon:
+    search_terms: ["lemons", "lemon"]
+    requires_user_detail: false
+  lime:
+    search_terms: ["limes", "lime"]
+    requires_user_detail: false
+  mango:
+    search_terms: ["mango"]
+    requires_user_detail: false
+  mushrooms:
+    search_terms: ["mushrooms"]
+    requires_user_detail: true
+    detail_prompt: "Are the mushrooms fresh or cooked?"
+  onion:
+    search_terms: ["onions"]
+    requires_user_detail: false
+  orange:
+    search_terms: ["oranges"]
+    requires_user_detail: false
+  persimmon:
+    search_terms: ["persimmon"]
+    requires_user_detail: false
+  pomegranate:
+    search_terms: ["pomegranate"]
+    requires_user_detail: false
+  potato:
+    search_terms: ["potatoes"]
+    requires_user_detail: true
+    detail_prompt: "Are the potatoes whole or cut/prepared?"
+  spinach:
+    search_terms: ["spinach"]
+    requires_user_detail: true
+    detail_prompt: "Is the spinach fresh, bagged, or cooked?"
+  strawberries:
+    search_terms: ["strawberries"]
+    requires_user_detail: true
+    detail_prompt: "Are the strawberries whole or cut?"
+  sugar:
+    search_terms: ["sugar"]
+    requires_user_detail: false
+  sweet_potato:
+    search_terms: ["sweet potatoes"]
+    requires_user_detail: false
+  tomato:
+    search_terms: ["tomatoes", "tomato"]
+    requires_user_detail: true
+    detail_prompt: "Are the tomatoes whole or cut?"
