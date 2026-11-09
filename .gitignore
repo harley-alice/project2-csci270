@@ -236,5 +236,7 @@ __marimo__/
 data/
 runs/
 *.pt
+*.onnx
+*.torchscript
 *.zip
 .DS_Store
