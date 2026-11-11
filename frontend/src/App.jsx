@@ -22,6 +22,13 @@ export default function App() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
+  // Drawing bounding box state
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawingStart, setDrawingStart] = useState(null);
+  const [currentBox, setCurrentBox] = useState(null);
+  const imageContainerRef = useRef(null);
+  const imgElementRef = useRef(null);
+
   // Stop camera when navigating away from step 1
   useEffect(() => {
     return () => {
@@ -199,7 +206,7 @@ export default function App() {
   };
 
   // Add missed item (false negative / active learning hook)
-  const addMissedItem = () => {
+  const addMissedItem = (customBbox = [0.35, 0.35, 0.65, 0.65]) => {
     const defaultLabel = 'apple';
     const newItem = {
       id: String(Date.now()),
@@ -207,7 +214,7 @@ export default function App() {
       confidence: 1.0,
       packageState: 'sealed',
       days: estimateShelfLife(defaultLabel, false),
-      bbox: [0.35, 0.35, 0.65, 0.65], // Center placeholder box
+      bbox: customBbox,
       userEdited: true,
       manuallyAdded: true
     };
@@ -224,6 +231,52 @@ export default function App() {
     });
 
     setRawDetections((prev) => [...prev, newItem]);
+  };
+
+  const getRelativeCoords = (e) => {
+    const rect = imgElementRef.current?.getBoundingClientRect() || imageContainerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    return { x, y };
+  };
+
+  const handleMouseDown = (e) => {
+    if (!isDrawingMode) return;
+    e.preventDefault();
+    const coords = getRelativeCoords(e);
+    setDrawingStart(coords);
+    setCurrentBox({ xmin: coords.x, ymin: coords.y, xmax: coords.x, ymax: coords.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDrawingMode || !drawingStart) return;
+    const coords = getRelativeCoords(e);
+    setCurrentBox({
+      xmin: Math.min(drawingStart.x, coords.x),
+      ymin: Math.min(drawingStart.y, coords.y),
+      xmax: Math.max(drawingStart.x, coords.x),
+      ymax: Math.max(drawingStart.y, coords.y)
+    });
+  };
+
+  const handleMouseUp = () => {
+    if (!isDrawingMode || !drawingStart || !currentBox) {
+      setDrawingStart(null);
+      setCurrentBox(null);
+      return;
+    }
+
+    const width = currentBox.xmax - currentBox.xmin;
+    const height = currentBox.ymax - currentBox.ymin;
+
+    // Only create box if user actually dragged a reasonable size (at least 2% in width & height)
+    if (width > 0.02 && height > 0.02) {
+      addMissedItem([currentBox.ymin, currentBox.xmin, currentBox.ymax, currentBox.xmax]);
+      setIsDrawingMode(false);
+    }
+
+    setDrawingStart(null);
+    setCurrentBox(null);
   };
 
   const visibleItems = rawDetections.filter(
@@ -446,8 +499,27 @@ export default function App() {
           </div>
 
           {/* Photo with Bounding Boxes */}
-          <div style={{ position: 'relative', border: '1px solid var(--color-border)', marginBottom: '24px', background: '#000000' }}>
-            <img src={image} alt="Scanned fridge interior preview" style={{ display: 'block', width: '100%', maxHeight: '420px', objectFit: 'contain' }} />
+          <div
+            ref={imageContainerRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            style={{
+              position: 'relative',
+              border: isDrawingMode ? '2px solid var(--color-primary-accent)' : '1px solid var(--color-border)',
+              marginBottom: '24px',
+              background: '#000000',
+              cursor: isDrawingMode ? 'crosshair' : 'default',
+              userSelect: 'none'
+            }}
+          >
+            <img
+              ref={imgElementRef}
+              src={image}
+              alt="Scanned fridge interior preview"
+              draggable={false}
+              style={{ display: 'block', width: '100%', maxHeight: '420px', objectFit: 'contain', pointerEvents: 'none' }}
+            />
             <svg
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
               viewBox="0 0 1000 1000"
@@ -493,6 +565,20 @@ export default function App() {
                   </g>
                 );
               })}
+
+              {/* In-progress drawing preview box */}
+              {isDrawingMode && currentBox && (
+                <rect
+                  x={currentBox.xmin * 1000}
+                  y={currentBox.ymin * 1000}
+                  width={(currentBox.xmax - currentBox.xmin) * 1000}
+                  height={(currentBox.ymax - currentBox.ymin) * 1000}
+                  fill="rgba(255, 255, 255, 0.15)"
+                  stroke="var(--color-accent, #faad14)"
+                  strokeWidth="3"
+                  strokeDasharray="6,4"
+                />
+              )}
             </svg>
           </div>
 
@@ -500,24 +586,49 @@ export default function App() {
             <div>
               <h2 id="review-heading" style={{ fontSize: '18px', fontWeight: 700 }}>Review Detected Items</h2>
               <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                Verify items and set package state. FoodKeeper guidelines adjust shelf life automatically.
+                {isDrawingMode
+                  ? 'Click and drag on the photo above to outline the missed food item.'
+                  : 'Verify items and set package state. FoodKeeper guidelines adjust shelf life automatically.'}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={addMissedItem}
-              style={{
-                background: '#ffffff',
-                border: '1px solid var(--color-border)',
-                padding: '8px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                minHeight: '44px'
-              }}
-            >
-              + Add Missed Item
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setIsDrawingMode(!isDrawingMode)}
+                style={{
+                  background: isDrawingMode ? 'var(--color-primary-accent)' : '#ffffff',
+                  color: isDrawingMode ? '#ffffff' : 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '44px'
+                }}
+              >
+                {isDrawingMode ? 'Drawing... (Click & Drag)' : '+ Draw Missed Item'}
+              </button>
+              {isDrawingMode && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDrawingMode(false);
+                    setCurrentBox(null);
+                    setDrawingStart(null);
+                  }}
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid var(--color-border)',
+                    padding: '8px 12px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    minHeight: '44px'
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '13px' }}>
