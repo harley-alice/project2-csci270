@@ -5,8 +5,7 @@ Food Safety Hierarchy
 Loads the food safety hierarchy from food_safety_tiers.yaml
 and provides functions for retrieving food classifications.
 
-The hierarchy assigns safety priorities, but does not independently 
-determine whether food is safe to eat.
+The hierarchy assigns safety priorities.
 """
 
 from pathlib import Path
