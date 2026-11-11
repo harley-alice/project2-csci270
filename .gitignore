@@ -48,8 +48,31 @@ coverage.xml
 *.cover
 *.py.cover
 .hypothesis/
+
+# Node / Frontend
+node_modules/
+dist/
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vite/
+
 .pytest_cache/
 cover/
+
+# Node / Frontend
+node_modules/
+dist/
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vite/
 
 # Translations
 *.mo
@@ -223,3 +246,9 @@ runs/
 *.pt
 *.zip
 .DS_Store
+
+# Python venv lives in the repo root (this folder is the venv)
+/bin/
+/share/
+/include/
+/pyvenv.cfg

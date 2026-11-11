@@ -1,0 +1,15 @@
+{
+  "weights": "ml/runs/baseline_v8n/weights/best.pt",
+  "split": "val",
+  "data": "data/cleaned/data.yaml",
+  "imgsz": 640,
+  "conf": 0.001,
+  "iou": 0.6,
+  "device": "mps",
+  "mAP50": 0.929928766035786,
+  "mAP50_95": 0.720225022337858,
+  "mean_precision": 0.9136605734370832,
+  "mean_recall": 0.8938823138108699,
+  "images_evaluated": 398,
+  "instances_evaluated": 1989
+}

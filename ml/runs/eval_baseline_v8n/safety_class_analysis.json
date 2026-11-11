@@ -1,0 +1,74 @@
+{
+  "chicken": {
+    "n_instances": 57,
+    "precision": 0.9660032705057777,
+    "recall": 0.9970455409716795,
+    "AP50": 0.9768024771838333,
+    "AP50-95": 0.6799516664140295,
+    "recall_vs_mean": "above",
+    "true_instances_in_matrix": 57,
+    "true_breakdown": {
+      "correct": 57,
+      "other_meat": 0,
+      "produce_or_other_food": 0,
+      "missed_background": 0
+    },
+    "predicted_total": 59,
+    "predicted_breakdown": {
+      "correct": 57,
+      "actually_other_meat": 0,
+      "actually_produce_or_other_food": 1,
+      "actually_background_false_positive": 1
+    },
+    "other_meat_detail": {},
+    "produce_detail_top": []
+  },
+  "beef": {
+    "n_instances": 50,
+    "precision": 0.8391556246307722,
+    "recall": 0.98,
+    "AP50": 0.9762791244141205,
+    "AP50-95": 0.6080955157435153,
+    "recall_vs_mean": "above",
+    "true_instances_in_matrix": 50,
+    "true_breakdown": {
+      "correct": 49,
+      "other_meat": 0,
+      "produce_or_other_food": 0,
+      "missed_background": 1
+    },
+    "predicted_total": 61,
+    "predicted_breakdown": {
+      "correct": 49,
+      "actually_other_meat": 0,
+      "actually_produce_or_other_food": 0,
+      "actually_background_false_positive": 12
+    },
+    "other_meat_detail": {},
+    "produce_detail_top": []
+  },
+  "shrimp": {
+    "n_instances": 35,
+    "precision": 0.9327909301105844,
+    "recall": 1.0,
+    "AP50": 0.9906756756756757,
+    "AP50-95": 0.6582274075754679,
+    "recall_vs_mean": "above",
+    "true_instances_in_matrix": 35,
+    "true_breakdown": {
+      "correct": 35,
+      "other_meat": 0,
+      "produce_or_other_food": 0,
+      "missed_background": 0
+    },
+    "predicted_total": 37,
+    "predicted_breakdown": {
+      "correct": 35,
+      "actually_other_meat": 0,
+      "actually_produce_or_other_food": 2,
+      "actually_background_false_positive": 0
+    },
+    "other_meat_detail": {},
+    "produce_detail_top": []
+  }
+}
