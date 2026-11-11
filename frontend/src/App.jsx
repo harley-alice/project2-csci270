@@ -17,6 +17,9 @@ export default function App() {
     { id: 't2', label: 'egg', packageState: 'sealed', days: 21 }
   ]);
 
+  // Helper to format class labels for friendly frontend display (e.g. 'bell_pepper' -> 'bell pepper')
+  const formatLabel = (label) => (label ? label.replace(/_/g, ' ') : '');
+
   // Live Camera state
   const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef(null);
@@ -560,7 +563,7 @@ export default function App() {
                       fontSize="12"
                       fontWeight="bold"
                     >
-                      {it.label}
+                      {formatLabel(it.label)}
                     </text>
                   </g>
                 );
@@ -665,11 +668,14 @@ export default function App() {
                           background: it.userEdited ? '#f4f6fb' : '#ffffff',
                           fontWeight: it.userEdited ? 600 : 400,
                           width: '90%',
-                          minHeight: '40px'
+                          minHeight: '40px',
+                          textTransform: 'capitalize'
                         }}
                       >
                         {FOOD_CLASSES.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>
+                            {formatLabel(c)}
+                          </option>
                         ))}
                       </select>
                     </td>
@@ -856,7 +862,7 @@ export default function App() {
                 return (
                   <tr key={t.id} style={{ borderBottom: '1px solid #e5e5e5' }}>
                     <td style={{ padding: '12px 0', textTransform: 'capitalize', fontWeight: 600 }}>
-                      {t.label}
+                      {formatLabel(t.label)}
                     </td>
                     <td style={{ padding: '12px 0', textTransform: 'capitalize', color: 'var(--color-text-muted)' }}>
                       {t.packageState || 'Sealed'}
