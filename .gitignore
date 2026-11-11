@@ -60,11 +60,19 @@ yarn-error.log*
 .pnpm-debug.log*
 .vite/
 
-# Local testing helpers
-local_test_server.py
-
 .pytest_cache/
 cover/
+
+# Node / Frontend
+node_modules/
+dist/
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vite/
 
 # Translations
 *.mo
@@ -236,7 +244,11 @@ __marimo__/
 data/
 runs/
 *.pt
-*.onnx
-*.torchscript
 *.zip
 .DS_Store
+
+# Python venv lives in the repo root (this folder is the venv)
+/bin/
+/share/
+/include/
+/pyvenv.cfg
