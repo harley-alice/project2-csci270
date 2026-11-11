@@ -12,6 +12,7 @@ tiers:
       detected item is raw or unsafe.
     classes:
       - beef
+      - ground_beef
       - chicken
       - shrimp
 

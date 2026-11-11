@@ -1,0 +1,250 @@
+
+# Maps normalized computer-vision classes to USDA FoodKeeper products.
+#
+# Product IDs are candidate matches, not automatic equivalences.
+# Classes with multiple product types require user confirmation.
+#
+# An empty product_ids list and empty search_terms list mean that
+# no sufficiently specific FoodKeeper match has been approved.
+#
+# Do not use unrelated products to fill missing mappings.
+
+tiers:
+
+  # --------------------------------------------------
+  # Tier 1: High-priority refrigerated foods
+  # --------------------------------------------------
+
+  tier_1:
+
+    beef:
+      product_ids: [34, 35, 36, 37, 38, 39, 40, 41, 42]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Which beef product is this? Confirm the cut and whether it is whole-muscle beef or another preparation."
+
+    ground_beef:
+      product_ids: [43]
+      search_terms: []
+      requires_user_detail: false
+
+    chicken:
+      product_ids: [113, 116, 117, 118]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this a whole chicken, bone-in breast, boneless breast, or chicken legs/thighs?"
+
+    shrimp:
+      product_ids: [151, 325]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is the shrimp raw or cooked, fresh or previously frozen, and in what condition is it being stored? Confirm the matching FoodKeeper product before using its guidance."
+
+
+  # --------------------------------------------------
+  # Tier 2: Refrigerated dairy, eggs, and processed meats
+  # --------------------------------------------------
+
+  tier_2:
+
+    bacon:
+      product_ids: [79, 107, 683]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is the bacon regular, fully cooked, or uncured?"
+
+    butter:
+      product_ids: [1]
+      search_terms: []
+      requires_user_detail: false
+
+    cheese:
+      product_ids: [3, 4, 5, 6, 7, 9, 10, 544, 546, 628]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "What type of cheese is this? Confirm whether it is hard, grated, shredded, processed, soft, cottage, cream cheese, string cheese, quark, or cheese curds."
+
+    cream:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Please identify the type of cream, such as heavy cream, light cream, or another product. No sufficiently specific FoodKeeper match has been approved."
+
+    egg:
+      product_ids: [21, 22, 23]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Are these eggs in their shells, raw separated whites or yolks, or hard-boiled eggs?"
+
+    goat_cheese:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Confirm the exact goat cheese product and its condition. The available general soft-cheese record is not specific enough to provide goat-cheese guidance."
+
+    ham:
+      product_ids: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 515, 676, 677]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this canned, fully cooked, fresh, uncooked, country, deli, or uncured ham?"
+
+    milk:
+      product_ids: [27, 543, 644, 659]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this regular or flavored milk, lactose-free milk, shelf-stable milk, or ultra-pasteurized milk?"
+
+    yogurt:
+      product_ids: [33]
+      search_terms: []
+      requires_user_detail: false
+
+
+  # --------------------------------------------------
+  # Tier 3: Produce and pantry foods
+  # --------------------------------------------------
+
+  tier_3:
+
+    apple:
+      product_ids: [248]
+      search_terms: []
+      requires_user_detail: false
+
+    avocado:
+      product_ids: [250]
+      search_terms: []
+      requires_user_detail: false
+
+    banana:
+      product_ids: [251]
+      search_terms: []
+      requires_user_detail: false
+
+    bell_pepper:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "No sufficiently specific fresh bell pepper product was identified in FoodKeeper. Do not substitute roasted or jarred peppers."
+
+    blueberries:
+      product_ids: [254]
+      search_terms: []
+      requires_user_detail: false
+
+    bread:
+      product_ids: [195, 460, 461, 574]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this commercial bread, homemade bread, or whole-wheat bread? Confirm the product type before using storage guidance."
+
+    carrot:
+      product_ids: [279, 491]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this a regular carrot, baby carrot, or another carrot/parsnip product?"
+
+    chocolate:
+      product_ids: [216]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Confirm that this is solid unsweetened or semi-sweet chocolate, rather than syrup, baked goods, or another chocolate product."
+
+    corn:
+      product_ids: [282]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Confirm that this is corn on the cob. The mapped product does not represent every processed corn product."
+
+    flour:
+      product_ids: [222, 223, 459]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this white flour or whole-wheat flour? Confirm the flour type before using storage guidance."
+
+    green_beans:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "No sufficiently specific green bean product was identified. Do not substitute the broad mixed beans and peas category."
+
+    lemon:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "No sufficiently specific fresh lemon product has been approved. The mixed citrus record is not an exact match."
+
+    lime:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "No sufficiently specific fresh lime product has been approved. The mixed citrus record is not an exact match."
+
+    mango:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "No sufficiently specific mango product has been approved. The mixed fruit record is not an exact match."
+
+    mushrooms:
+      product_ids: [292, 385]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Are these fresh mushrooms or dried mushrooms?"
+
+    onion:
+      product_ids: [294, 295]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Are these yellow, white, red, spring, or green onions?"
+
+    orange:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "No sufficiently specific fresh orange product has been approved. The mixed citrus record is not an exact match."
+
+    persimmon:
+      product_ids: []
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "No suitable FoodKeeper persimmon product was identified. Do not substitute another fruit."
+
+    pomegranate:
+      product_ids: [269]
+      search_terms: []
+      requires_user_detail: false
+
+    potato:
+      product_ids: [297]
+      search_terms: []
+      requires_user_detail: false
+
+    spinach:
+      product_ids: [291, 415]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this fresh spinach or spinach included in a bagged greens product?"
+
+    strawberries:
+      product_ids: [481]
+      search_terms: []
+      requires_user_detail: false
+
+    sugar:
+      product_ids: [239, 240, 241]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this brown sugar, granulated sugar, or confectioners sugar?"
+
+    sweet_potato:
+      product_ids: [422]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Confirm whether this is a sweet potato or a yam. The FoodKeeper category combines both."
+
+    tomato:
+      product_ids: [306, 600]
+      search_terms: []
+      requires_user_detail: true
+      detail_prompt: "Is this a regular tomato or a cherry tomato?"
