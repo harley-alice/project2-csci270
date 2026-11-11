@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import heic2any from 'heic2any';
 import { FOOD_CLASSES, INITIAL_DETECTIONS } from './mockData';
 import { estimateShelfLife, sendFeedback, detectFridgeItems } from './services/api';
 
@@ -101,16 +102,36 @@ export default function App() {
   };
 
   const handleFile = async (e) => {
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     if (file) {
       stopCamera();
-      setImage(URL.createObjectURL(file));
       setRawDetections([]);
       setDetectionError(null);
       setIsDetecting(true);
       setStep(2);
 
       try {
+        // Convert HEIC / HEIF (standard iOS camera photos) to JPEG in the browser
+        const lowerName = file.name.toLowerCase();
+        const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
+          lowerName.endsWith('.heic') || lowerName.endsWith('.heif');
+
+        if (isHeic) {
+          try {
+            const convertedBlob = await heic2any({
+              blob: file,
+              toType: 'image/jpeg',
+              quality: 0.85
+            });
+            const singleBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+            file = new File([singleBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+          } catch (heicErr) {
+            console.warn('HEIC conversion warning:', heicErr);
+          }
+        }
+
+        setImage(URL.createObjectURL(file));
+
         const results = await detectFridgeItems(file);
         setRawDetections(
           results.map((it) => ({
@@ -403,7 +424,7 @@ export default function App() {
                   Upload Image
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/jpg"
+                    accept="image/jpeg,image/png,image/webp,image/jpg,image/heic,image/heif,.heic,.heif"
                     onChange={handleFile}
                     aria-label="Upload fridge image"
                     style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}
