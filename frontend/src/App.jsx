@@ -12,7 +12,7 @@ export default function App() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState(null);
   const [rawDetections, setRawDetections] = useState([]);
-  const [confidenceThreshold, setConfidenceThreshold] = useState(0.50);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.20);
   const [tracking, setTracking] = useState([
     { id: 't1', label: 'yogurt', packageState: 'sealed', days: 14 },
     { id: 't2', label: 'egg', packageState: 'sealed', days: 21 }
@@ -230,7 +230,7 @@ export default function App() {
   };
 
   // Add missed item (false negative / active learning hook)
-  const addMissedItem = (customBbox = [0.35, 0.35, 0.65, 0.65]) => {
+  const addMissedItem = (customBbox = null) => {
     const defaultLabel = 'apple';
     const newItem = {
       id: String(Date.now()),
@@ -238,14 +238,14 @@ export default function App() {
       confidence: 1.0,
       packageState: 'sealed',
       days: estimateShelfLife(defaultLabel, false),
-      bbox: customBbox,
+      bbox: customBbox, // null if added manually without drawing
       userEdited: true,
       manuallyAdded: true
     };
 
     sendFeedback({
       timestamp: new Date().toISOString(),
-      type: 'missed_item_added',
+      type: customBbox ? 'missed_item_added_with_box' : 'missed_item_added_manually',
       image_source: image.startsWith('data:') ? 'camera' : 'upload',
       detection_id: newItem.id,
       predicted_label: null,
@@ -505,12 +505,12 @@ export default function App() {
             <input
               id="detection-slider"
               type="range"
-              min="0.20"
+              min="0.05"
               max="0.95"
               step="0.05"
               value={confidenceThreshold}
               onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
-              aria-valuemin="0.20"
+              aria-valuemin="0.05"
               aria-valuemax="0.95"
               aria-valuenow={confidenceThreshold}
               aria-valuetext={`${Math.round(confidenceThreshold * 100)} percent confidence`}
@@ -551,6 +551,7 @@ export default function App() {
               aria-hidden="true"
             >
               {visibleItems.map((it) => {
+                if (!it.bbox) return null; // Skip items added without an image bounding box
                 const [ymin, xmin, ymax, xmax] = it.bbox;
                 const isUnsure = (it.confidence ?? 1.0) < 0.60;
                 const strokeColor = it.userEdited
@@ -618,7 +619,11 @@ export default function App() {
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 type="button"
-                onClick={() => setIsDrawingMode(!isDrawingMode)}
+                onClick={() => {
+                  setIsDrawingMode(!isDrawingMode);
+                  setCurrentBox(null);
+                  setDrawingStart(null);
+                }}
                 style={{
                   background: isDrawingMode ? 'var(--color-primary-accent)' : '#ffffff',
                   color: isDrawingMode ? '#ffffff' : 'var(--color-text)',
@@ -630,7 +635,7 @@ export default function App() {
                   minHeight: '44px'
                 }}
               >
-                {isDrawingMode ? 'Drawing... (Click & Drag)' : '+ Draw Missed Item'}
+                {isDrawingMode ? 'Drawing... (Click & Drag Photo)' : '+ Add Missed Item'}
               </button>
               {isDrawingMode && (
                 <button
