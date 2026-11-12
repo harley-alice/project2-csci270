@@ -523,88 +523,106 @@ export default function App() {
           </div>
 
           {/* Photo with Bounding Boxes */}
-          <div
-            ref={imageContainerRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            style={{
-              position: 'relative',
-              border: isDrawingMode ? '2px solid var(--color-primary-accent)' : '1px solid var(--color-border)',
-              marginBottom: '24px',
-              background: '#000000',
-              cursor: isDrawingMode ? 'crosshair' : 'default',
-              userSelect: 'none'
-            }}
-          >
-            <img
-              ref={imgElementRef}
-              src={image}
-              alt="Scanned fridge interior preview"
-              draggable={false}
-              style={{ display: 'block', width: '100%', maxHeight: '420px', objectFit: 'contain', pointerEvents: 'none' }}
-            />
-            <svg
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-              viewBox="0 0 1000 1000"
-              preserveAspectRatio="none"
-              aria-hidden="true"
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div
+              ref={imageContainerRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              style={{
+                display: 'inline-block',
+                position: 'relative',
+                lineHeight: 0,
+                border: isDrawingMode ? '2px solid var(--color-primary-accent)' : '1px solid var(--color-border)',
+                background: '#000000',
+                cursor: isDrawingMode ? 'crosshair' : 'default',
+                userSelect: 'none',
+                maxWidth: '100%'
+              }}
             >
-              {visibleItems.map((it) => {
-                if (!it.bbox) return null; // Skip items added without an image bounding box
-                const [ymin, xmin, ymax, xmax] = it.bbox;
-                const isUnsure = (it.confidence ?? 1.0) < 0.60;
-                const strokeColor = it.userEdited
-                  ? 'var(--color-accent)'
-                  : isUnsure
-                  ? 'var(--color-attention)'
-                  : 'var(--color-primary-accent)';
+              <img
+                ref={imgElementRef}
+                src={image}
+                alt="Scanned fridge interior preview"
+                draggable={false}
+                style={{
+                  display: 'block',
+                  maxWidth: '100%',
+                  maxHeight: '520px',
+                  width: 'auto',
+                  height: 'auto',
+                  pointerEvents: 'none'
+                }}
+              />
+              <svg
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  pointerEvents: 'none'
+                }}
+                viewBox="0 0 1000 1000"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {visibleItems.map((it) => {
+                  if (!it.bbox) return null; // Skip items added without an image bounding box
+                  const [ymin, xmin, ymax, xmax] = it.bbox;
+                  const isUnsure = (it.confidence ?? 1.0) < 0.60;
+                  const strokeColor = it.userEdited
+                    ? 'var(--color-accent)'
+                    : isUnsure
+                    ? 'var(--color-attention)'
+                    : 'var(--color-primary-accent)';
 
-                return (
-                  <g key={it.id}>
-                    <rect
-                      x={xmin * 1000}
-                      y={ymin * 1000}
-                      width={(xmax - xmin) * 1000}
-                      height={(ymax - ymin) * 1000}
-                      fill="none"
-                      stroke={strokeColor}
-                      strokeWidth="3"
-                    />
-                    <rect
-                      x={xmin * 1000}
-                      y={Math.max(0, ymin * 1000 - 22)}
-                      width={Math.max(70, it.label.length * 10 + 20)}
-                      height="22"
-                      fill={strokeColor}
-                    />
-                    <text
-                      x={xmin * 1000 + 6}
-                      y={Math.max(16, ymin * 1000 - 6)}
-                      fill={it.userEdited ? '#000000' : '#ffffff'}
-                      fontSize="12"
-                      fontWeight="bold"
-                    >
-                      {formatLabel(it.label)}
-                    </text>
-                  </g>
-                );
-              })}
+                  return (
+                    <g key={it.id}>
+                      <rect
+                        x={xmin * 1000}
+                        y={ymin * 1000}
+                        width={(xmax - xmin) * 1000}
+                        height={(ymax - ymin) * 1000}
+                        fill="none"
+                        stroke={strokeColor}
+                        strokeWidth="3"
+                      />
+                      <rect
+                        x={xmin * 1000}
+                        y={Math.max(0, ymin * 1000 - 22)}
+                        width={Math.max(70, it.label.length * 10 + 20)}
+                        height="22"
+                        fill={strokeColor}
+                      />
+                      <text
+                        x={xmin * 1000 + 6}
+                        y={Math.max(16, ymin * 1000 - 6)}
+                        fill={it.userEdited ? '#000000' : '#ffffff'}
+                        fontSize="12"
+                        fontWeight="bold"
+                      >
+                        {formatLabel(it.label)}
+                      </text>
+                    </g>
+                  );
+                })}
 
-              {/* In-progress drawing preview box */}
-              {isDrawingMode && currentBox && (
-                <rect
-                  x={currentBox.xmin * 1000}
-                  y={currentBox.ymin * 1000}
-                  width={(currentBox.xmax - currentBox.xmin) * 1000}
-                  height={(currentBox.ymax - currentBox.ymin) * 1000}
-                  fill="rgba(255, 255, 255, 0.15)"
-                  stroke="var(--color-accent, #faad14)"
-                  strokeWidth="3"
-                  strokeDasharray="6,4"
-                />
-              )}
-            </svg>
+                {/* In-progress drawing preview box */}
+                {isDrawingMode && currentBox && (
+                  <rect
+                    x={currentBox.xmin * 1000}
+                    y={currentBox.ymin * 1000}
+                    width={(currentBox.xmax - currentBox.xmin) * 1000}
+                    height={(currentBox.ymax - currentBox.ymin) * 1000}
+                    fill="rgba(255, 255, 255, 0.15)"
+                    stroke="var(--color-accent, #faad14)"
+                    strokeWidth="3"
+                    strokeDasharray="6,4"
+                  />
+                )}
+              </svg>
+            </div>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
