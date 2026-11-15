@@ -15,7 +15,8 @@ export async function detectFridgeItems(imageBlob) {
     const formData = new FormData();
     formData.append('file', imageBlob, 'fridge_scan.jpg');
 
-    const res = await fetch('/detect', {
+    // CJ's FastAPI backend serves POST /api/detect (it also keeps /detect as an alias for Alice's local_test_server.py)
+    const res = await fetch('/api/detect', {
       method: 'POST',
       body: formData
     });
@@ -24,15 +25,19 @@ export async function detectFridgeItems(imageBlob) {
       let errMsg = `Detection failed with status: ${res.status}`;
       try {
         const errJson = await res.json();
+        // local_test_server.py uses {error}, FastAPI uses {detail} (string, or a list of validation errors)
         if (errJson && errJson.error) errMsg = errJson.error;
+        else if (errJson && typeof errJson.detail === 'string') errMsg = errJson.detail;
+        else if (errJson && Array.isArray(errJson.detail)) errMsg = errJson.detail.map((d) => d.msg).join('; ');
       } catch (_) {}
       throw new Error(errMsg);
     }
     const data = await res.json();
-    return data;
+    // The FastAPI backend wraps results as {success, count, detections: [...]}; the local test server returns a bare array
+    return Array.isArray(data) ? data : data.detections || [];
   } catch (err) {
     if (fallbackToMock) {
-      console.warn('[API Service] Backend /detect offline, using local mock detections.');
+      console.warn('[API Service] Backend /api/detect offline, using local mock detections.');
       await new Promise((r) => setTimeout(r, 600));
       return INITIAL_DETECTIONS;
     }

@@ -13,6 +13,8 @@ from backend.inference import inference_service
 from backend.schemas import DetectResponse
 
 router = APIRouter(prefix="/api", tags=["Inference"])
+# Un-prefixed router so the same handler is also served at POST /detect (the path Alice's local_test_server.py uses)
+alias_router = APIRouter(tags=["Inference"])
 logger = logging.getLogger("fridge_tracker.routes.detect")
 
 
@@ -79,3 +81,12 @@ async def infer_alias(
 ):
     return await detect_food(file=file, confidence_threshold=confidence_threshold)
 
+
+# POST /detect -> exactly the same handler as POST /api/detect
+alias_router.add_api_route(
+    "/detect",
+    detect_food,
+    methods=["POST"],
+    response_model=DetectResponse,
+    summary="Alias of POST /api/detect",
+)

@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.database import get_db, init_db
 from backend.foodkeeper_data import seed_database
+from backend.routes.detect import alias_router as detect_alias_router
 from backend.routes.detect import router as detect_router
 from backend.routes.feedback import router as feedback_router
 from backend.routes.inventory import router as inventory_router
@@ -64,6 +65,7 @@ app.add_middleware(
 
 # Register routers
 app.include_router(detect_router)
+app.include_router(detect_alias_router)
 app.include_router(inventory_router)
 app.include_router(rules_router)
 app.include_router(feedback_router)
@@ -78,7 +80,7 @@ def root():
         "redoc": "/redoc",
         "health": "/api/health",
         "endpoints": {
-            "detect": "POST /api/detect",
+            "detect": "POST /api/detect (alias: POST /detect)",
             "inventory": "GET, POST /api/inventory",
             "verify": "POST /api/inventory/{id}/verify",
             "storage_duration": "PATCH /api/inventory/{id}/duration",
