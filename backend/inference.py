@@ -19,6 +19,7 @@ from PIL import Image
 from ultralytics import YOLO
 
 from backend.rule_engine import rule_engine
+from backend.safety_adapter import assess as assess_safety
 
 logger = logging.getLogger("fridge_tracker.inference")
 
@@ -132,9 +133,18 @@ class FoodInferenceService:
             norm_ymax = max(0.0, min(1.0, ymax / img_h))
             norm_xmax = max(0.0, min(1.0, xmax / img_w))
 
-            # Query Hybrid Rule Engine
+            # Display-only fields (name, category, container flag) come from CJ's rule engine.
             rule_info = rule_engine.calculate_expiration(
                 food_class=raw_label,
+                package_state=package_state,
+                storage_location=storage_location,
+            )
+            # Source of truth for safety (Ashton's ml/food_safety via the adapter): tier,
+            # requires_confirmation and shelf-life days. Her days are None until the product is
+            # confirmed or when she does not support the product; rule_engine's hand-entered day
+            # counts are deliberately NOT used for detections (they bypass her confirmation gate).
+            safety = assess_safety(
+                rule_info["food_class"],
                 package_state=package_state,
                 storage_location=storage_location,
             )
@@ -146,24 +156,26 @@ class FoodInferenceService:
                 "label": rule_info["food_class"],
                 "display_name": rule_info["display_name"],
                 "confidence": round(conf, 4),
-                "days": rule_info["recommended_shelf_life_days"],
-                "days_min": rule_info["shelf_life_days_min"],
-                "days_max": rule_info["shelf_life_days_max"],
+                "days": safety["days"],
+                "days_min": safety["days_min"],
+                "days_max": safety["days_max"],
                 "bbox": [
                     round(norm_ymin, 4),
                     round(norm_xmin, 4),
                     round(norm_ymax, 4),
                     round(norm_xmax, 4),
                 ],
-                "safety_tier": rule_info["safety_tier"],
+                "safety_tier": safety["safety_tier"],
                 "category_name": rule_info["category_name"],
                 "package_state": package_state,
                 "storage_location": storage_location,
-                "requires_user_detail": rule_info["requires_user_detail"],
-                "detail_prompt": rule_info["detail_prompt"],
-                "usda_guidance": rule_info["usda_guidance"],
+                "requires_user_detail": safety["requires_confirmation"],
+                "detail_prompt": safety["confirmation_prompt"],
+                # CJ's guidance text quotes day counts, so only show it once Ashton gives days
+                "usda_guidance": rule_info["usda_guidance"] if safety["days"] is not None else None,
                 "is_container": rule_info["is_container"],
-                "is_high_risk": rule_info["is_high_risk"],
+                "is_high_risk": safety["safety_tier"] == "tier_1",
+                "requires_confirmation": safety["requires_confirmation"],
             })
 
         return detections

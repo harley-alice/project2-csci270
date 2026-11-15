@@ -739,6 +739,9 @@ export default function App() {
                           </option>
                         ))}
                       </select>
+                      {it.requires_confirmation && !it.userEdited && (
+                        <div style={{ fontSize: '12px', marginTop: '4px', fontWeight: 600 }}>Confirm this item</div>
+                      )}
                     </td>
 
                     <td style={{ padding: '12px 0' }}>

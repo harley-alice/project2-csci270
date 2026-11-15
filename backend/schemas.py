@@ -16,9 +16,11 @@ class DetectionItem(BaseModel):
     label: str
     display_name: str
     confidence: float
-    days: int
-    days_min: int
-    days_max: int
+    # days* are None when Ashton's food-safety workflow gives no confirmed, day-based guidance
+    # (confirmation still needed, or the product is unsupported). See backend/safety_adapter.py.
+    days: Optional[int] = None
+    days_min: Optional[int] = None
+    days_max: Optional[int] = None
     bbox: List[float] = Field(..., description="[ymin, xmin, ymax, xmax] in normalized 0.0-1.0 range")
     safety_tier: str
     category_name: str
@@ -29,6 +31,8 @@ class DetectionItem(BaseModel):
     usda_guidance: Optional[str] = None
     is_container: bool = False
     is_high_risk: bool = False
+    # True until the user has confirmed the product (always True for meat/poultry/seafood and jars)
+    requires_confirmation: bool = True
 
 
 class DetectResponse(BaseModel):
