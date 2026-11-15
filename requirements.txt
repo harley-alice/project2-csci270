@@ -1,0 +1,14 @@
+# Packages imported by backend/, ml/food_safety/ and tests/ (minimums are the versions in the
+# project venv). Python 3.10+.
+fastapi>=0.163.1
+uvicorn>=0.54.0
+python-multipart>=0.0.33   # needed by FastAPI for the image upload (UploadFile)
+pydantic>=2.14.3
+pillow>=13.0.0
+pyyaml>=6.0.3
+ultralytics>=8.4.197
+torch>=2.15.0
+
+# Tests
+pytest>=9.2.0
+httpx>=0.28.1              # used by fastapi.testclient
