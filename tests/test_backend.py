@@ -26,7 +26,7 @@ os.environ["FRIDGE_DB_PATH"] = temp_db.name
 
 from backend.database import get_db, init_db
 from backend.foodkeeper_data import seed_database
-from backend.inference import inference_service
+from backend.inference import ModelNotLoadedError, inference_service
 from backend.main import app
 from backend.rule_engine import rule_engine
 
@@ -102,9 +102,13 @@ class TestFridgeTrackerBackend(unittest.TestCase):
         with self.assertRaises(ValueError):
             inference_service.process_raw_image(b"")
 
-        # Predict call
-        detections = inference_service.predict(raw_bytes, confidence_threshold=0.5)
-        self.assertIsInstance(detections, list)
+        # Predict call (without weights the service now fails loudly instead of returning [])
+        if inference_service.model_loaded:
+            detections = inference_service.predict(raw_bytes, confidence_threshold=0.5)
+            self.assertIsInstance(detections, list)
+        else:
+            with self.assertRaises(ModelNotLoadedError):
+                inference_service.predict(raw_bytes, confidence_threshold=0.5)
 
     def test_04_fastapi_detect_endpoint(self):
         """Test POST /api/detect with simulated image upload."""
@@ -118,6 +122,9 @@ class TestFridgeTrackerBackend(unittest.TestCase):
             files={"file": ("fridge.jpg", buf, "image/jpeg")},
             params={"confidence_threshold": 0.20, "package_state": "sealed"},
         )
+        if not inference_service.model_loaded:
+            self.assertEqual(response.status_code, 503)
+            return
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["success"])

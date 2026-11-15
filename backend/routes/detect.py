@@ -9,7 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, status
 
-from backend.inference import inference_service
+from backend.inference import ModelNotLoadedError, inference_service
 from backend.schemas import DetectResponse
 
 router = APIRouter(prefix="/api", tags=["Inference"])
@@ -57,6 +57,14 @@ async def detect_food(
             confidence_threshold=confidence_threshold,
             detections=detections,
         )
+    except HTTPException:
+        raise  # e.g. the 400 for an empty file; do not turn it into a 500
+    except ModelNotLoadedError as mnl:
+        logger.error("Detection unavailable: %s", mnl)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(mnl),
+        )
     except ValueError as ve:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -79,7 +87,14 @@ async def infer_alias(
     file: UploadFile = File(...),
     confidence_threshold: float = Query(0.25, ge=0.05, le=0.99),
 ):
-    return await detect_food(file=file, confidence_threshold=confidence_threshold)
+    # Pass every argument explicitly: calling the handler directly would otherwise leave the
+    # remaining parameters as FastAPI Query(...) objects instead of their default values.
+    return await detect_food(
+        file=file,
+        confidence_threshold=confidence_threshold,
+        package_state="sealed",
+        storage_location="refrigerator",
+    )
 
 
 # POST /detect -> exactly the same handler as POST /api/detect

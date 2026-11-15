@@ -27,6 +27,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_WEIGHTS_PATH = PROJECT_ROOT / "ml" / "export" / "food_detector_v8n_baseline.pt"
 
 
+class ModelNotLoadedError(RuntimeError):
+    """Raised when detection is requested but the YOLO weights are missing or failed to load."""
+
+
 class FoodInferenceService:
     """
     Manages model loading, raw image transformation into tensors,
@@ -36,16 +40,15 @@ class FoodInferenceService:
     def __init__(self, weights_path: Path | str = DEFAULT_WEIGHTS_PATH):
         self.weights_path = Path(weights_path)
         self.model: Optional[YOLO] = None
+        self.load_error: Optional[str] = None
         self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
         self._load_model()
 
     def _load_model(self) -> None:
         """Load trained Ultralytics YOLOv8 weights into device."""
         if not self.weights_path.exists():
-            logger.warning(
-                "Model weights not found at %s. Inference service will operate in mock mode.",
-                self.weights_path,
-            )
+            self.load_error = f"Model weights not found at {self.weights_path}."
+            logger.error("%s Detection requests will return HTTP 503.", self.load_error)
             return
 
         try:
@@ -55,6 +58,19 @@ class FoodInferenceService:
         except Exception as exc:
             logger.error("Failed to load YOLO model: %s", exc)
             self.model = None
+            self.load_error = f"Model weights at {self.weights_path} could not be loaded: {exc}"
+
+    @property
+    def model_loaded(self) -> bool:
+        return self.model is not None
+
+    def status(self) -> Dict[str, Any]:
+        """Real model state for /api/health."""
+        return {
+            "yolo_model": "loaded" if self.model_loaded else "not_loaded",
+            "weights_path": str(self.weights_path),
+            "weights_exists": self.weights_path.exists(),
+        }
 
     def process_raw_image(self, image_bytes: bytes) -> Image.Image:
         """
@@ -90,12 +106,12 @@ class FoodInferenceService:
         4. Queries Hybrid AI Rule Engine to enrich each detected object with dynamic
            FoodKeeper shelf life windows based on package state.
         """
+        if self.model is None:
+            msg = self.load_error or f"Model weights not found at {self.weights_path}."
+            raise ModelNotLoadedError(f"{msg} Unzip model_export.zip at the repo root.")
+
         image = self.process_raw_image(image_bytes)
         img_w, img_h = image.size
-
-        if self.model is None:
-            logger.warning("YOLO model not loaded; returning empty detections.")
-            return []
 
         # Run inference through Ultralytics YOLO
         # Passing PIL.Image converts internally to PyTorch tensor on self.device

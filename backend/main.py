@@ -19,11 +19,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.database import get_db, init_db
 from backend.foodkeeper_data import seed_database
+from backend.inference import inference_service
 from backend.routes.detect import alias_router as detect_alias_router
 from backend.routes.detect import router as detect_router
 from backend.routes.feedback import router as feedback_router
 from backend.routes.inventory import router as inventory_router
 from backend.routes.rules import router as rules_router
+from backend.safety_adapter import foodkeeper_status
 
 logging.basicConfig(
     level=logging.INFO,
@@ -100,10 +102,13 @@ def api_root():
 @app.get("/api/health", tags=["Health"])
 def health_check():
     """Health check endpoint."""
+    model = inference_service.status()
     return {
-        "status": "healthy",
+        # "degraded" while detection cannot work (POST /api/detect returns 503 in that state)
+        "status": "healthy" if model["yolo_model"] == "loaded" else "degraded",
         "service": "fridge_tracker_api",
-        "yolo_model": "loaded",
+        **model,
+        **foodkeeper_status(),
         "database": "sqlite_ready",
     }
 
