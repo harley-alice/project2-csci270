@@ -24,6 +24,10 @@ from backend.safety_adapter import assess as assess_safety
 logger = logging.getLogger("fridge_tracker.inference")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Inference defaults, matching ml/export/MODEL_CARD.md (conf 0.25, iou 0.70). The API exposes
+# confidence_threshold as an optional query parameter; iou is fixed at the model-card value.
+DEFAULT_CONF = 0.25
+DEFAULT_IOU = 0.70
 DEFAULT_WEIGHTS_PATH = PROJECT_ROOT / "ml" / "export" / "food_detector_v8n_baseline.pt"
 
 
@@ -92,8 +96,8 @@ class FoodInferenceService:
     def predict(
         self,
         image_bytes: bytes,
-        confidence_threshold: float = 0.25,
-        iou_threshold: float = 0.45,
+        confidence_threshold: float = DEFAULT_CONF,
+        iou_threshold: float = DEFAULT_IOU,
         package_state: str = "sealed",
         storage_location: str = "refrigerator",
     ) -> List[Dict[str, Any]]:

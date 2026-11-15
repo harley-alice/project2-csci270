@@ -9,7 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, status
 
-from backend.inference import ModelNotLoadedError, inference_service
+from backend.inference import DEFAULT_CONF, ModelNotLoadedError, inference_service
 from backend.schemas import DetectResponse
 
 router = APIRouter(prefix="/api", tags=["Inference"])
@@ -27,7 +27,7 @@ logger = logging.getLogger("fridge_tracker.routes.detect")
 async def detect_food(
     file: UploadFile = File(..., description="Raw fridge photograph (JPEG, PNG, WebP)"),
     confidence_threshold: float = Query(
-        0.25, ge=0.05, le=0.99, description="Confidence threshold for bounding boxes"
+        DEFAULT_CONF, ge=0.05, le=0.99, description="Confidence threshold for bounding boxes"
     ),
     package_state: str = Query(
         "sealed", description="Package state assumption for initial scan ('sealed' or 'opened')"
@@ -85,7 +85,7 @@ async def detect_food(
 )
 async def infer_alias(
     file: UploadFile = File(...),
-    confidence_threshold: float = Query(0.25, ge=0.05, le=0.99),
+    confidence_threshold: float = Query(DEFAULT_CONF, ge=0.05, le=0.99),
 ):
     # Pass every argument explicitly: calling the handler directly would otherwise leave the
     # remaining parameters as FastAPI Query(...) objects instead of their default values.
