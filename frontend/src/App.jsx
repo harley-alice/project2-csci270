@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FOOD_CLASSES, INITIAL_DETECTIONS } from './mockData';
 
 const SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80';
@@ -9,16 +9,66 @@ export default function App() {
   const [image, setImage] = useState(SAMPLE_IMAGE);
   const [rawDetections, setRawDetections] = useState(INITIAL_DETECTIONS);
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.50);
+  const [isLoadingDetection, setIsLoadingDetection] = useState(false);
   const [tracking, setTracking] = useState([
     { id: 't1', label: 'yogurt', days: 5 },
     { id: 't2', label: 'egg', days: 12 }
   ]);
 
-  const handleFile = (e) => {
+  // Load inventory from SQLite backend on mount
+  useEffect(() => {
+    fetch('/api/inventory')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((items) => {
+        if (items && items.length > 0) {
+          setTracking(
+            items.map((it) => ({
+              id: it.id,
+              label: it.food_class,
+              days: it.days_remaining !== undefined ? it.days_remaining : it.shelf_life_days
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        // Fallback to local default tracking items
+      });
+  }, []);
+
+  const handleFile = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setImage(URL.createObjectURL(file));
-      setStep(2);
+    if (!file) return;
+
+    const localUrl = URL.createObjectURL(file);
+    setImage(localUrl);
+    setIsLoadingDetection(true);
+    setStep(2);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`/api/detect?confidence_threshold=0.20&package_state=sealed`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.detections && data.detections.length > 0) {
+          setRawDetections(data.detections);
+        } else {
+          // If no detections found above threshold, provide demo items as baseline
+          setRawDetections(INITIAL_DETECTIONS);
+        }
+      } else {
+        setRawDetections(INITIAL_DETECTIONS);
+      }
+    } catch {
+      // Fallback to demo items if API is not reachable
+      setRawDetections(INITIAL_DETECTIONS);
+    } finally {
+      setIsLoadingDetection(false);
     }
   };
 
@@ -80,8 +130,44 @@ export default function App() {
     (it) => it.userEdited || (it.confidence ?? 1.0) >= confidenceThreshold
   );
 
-  const confirmAndTrack = () => {
+  const confirmAndTrack = async () => {
     setStep(3);
+
+    // Persist items to backend
+    try {
+      const batchPayload = {
+        items: visibleItems.map((it) => ({
+          food_class: it.label,
+          package_state: 'sealed',
+          storage_location: 'refrigerator',
+          shelf_life_days: it.days,
+          confidence: it.confidence ?? 1.0,
+          bbox: it.bbox,
+          verified: Boolean(it.userEdited)
+        }))
+      };
+
+      const res = await fetch('/api/inventory/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(batchPayload)
+      });
+
+      if (res.ok) {
+        const createdItems = await res.json();
+        const formatted = createdItems.map((it) => ({
+          id: it.id,
+          label: it.food_class,
+          days: it.days_remaining !== undefined ? it.days_remaining : it.shelf_life_days
+        }));
+        setTracking((prev) => [...prev, ...formatted]);
+        setStep(4);
+        return;
+      }
+    } catch {
+      // Fallback to local state if offline
+    }
+
     setTimeout(() => {
       const newItems = visibleItems.map((it) => ({
         id: String(Date.now() + Math.random()),
@@ -90,10 +176,11 @@ export default function App() {
       }));
       setTracking([...tracking, ...newItems]);
       setStep(4);
-    }, 900);
+    }, 600);
   };
 
   const removeTracked = (id) => {
+    fetch(`/api/inventory/${id}`, { method: 'DELETE' }).catch(() => {});
     setTracking(tracking.filter((t) => t.id !== id));
   };
 
