@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import heic2any from 'heic2any';
 import { FOOD_CLASSES, INITIAL_DETECTIONS } from './mockData';
-import { estimateShelfLife, sendFeedback, detectFridgeItems } from './services/api';
+import { estimateShelfLife, sendFeedback, detectFridgeItems, getInventory, saveInventory } from './services/api';
 
 const SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80';
 
@@ -38,6 +38,28 @@ export default function App() {
     return () => {
       stopCamera();
     };
+  }, []);
+
+  // Load inventory from backend or local storage on initial mount
+  useEffect(() => {
+    async function loadInitialInventory() {
+      try {
+        const items = await getInventory();
+        if (items && Array.isArray(items) && items.length > 0) {
+          setTracking(
+            items.map((it) => ({
+              id: it.id || String(Date.now() + Math.random()),
+              label: it.food_class || it.label,
+              packageState: it.package_state || it.packageState || 'sealed',
+              days: it.days_remaining !== undefined ? it.days_remaining : (it.shelf_life_days || it.days || 7)
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn('Could not load existing inventory from backend:', err);
+      }
+    }
+    loadInitialInventory();
   }, []);
 
   const startCamera = async () => {
@@ -307,18 +329,29 @@ export default function App() {
     (it) => it.userEdited || (it.confidence ?? 1.0) >= confidenceThreshold
   );
 
-  const confirmAndTrack = () => {
+  const confirmAndTrack = async () => {
     setStep(3);
-    setTimeout(() => {
-      const newItems = visibleItems.map((it) => ({
-        id: String(Date.now() + Math.random()),
-        label: it.label,
-        packageState: it.packageState || 'sealed',
-        days: it.days
-      }));
-      setTracking([...tracking, ...newItems]);
-      setStep(4);
-    }, 900);
+    const newItems = visibleItems.map((it) => ({
+      id: String(Date.now() + Math.random()),
+      label: it.label,
+      food_class: it.label,
+      packageState: it.packageState || 'sealed',
+      package_state: it.packageState || 'sealed',
+      days: it.days,
+      shelf_life_days: it.days,
+      verified: Boolean(it.userEdited),
+      confidence: it.confidence,
+      bbox: it.bbox
+    }));
+
+    try {
+      await saveInventory(newItems);
+    } catch (err) {
+      console.warn('Failed saving items to backend batch inventory:', err);
+    }
+
+    setTracking((prev) => [...prev, ...newItems]);
+    setStep(4);
   };
 
   const removeTracked = (id) => {

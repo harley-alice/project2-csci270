@@ -10,12 +10,17 @@ export function setFallbackToMock(enable) {
 /**
  * Upload an image (File or Blob) to YOLO detection endpoint
  */
-export async function detectFridgeItems(imageBlob) {
+export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.25) {
   try {
     const formData = new FormData();
     formData.append('file', imageBlob, 'fridge_scan.jpg');
 
-    const res = await fetch('/detect', {
+    const queryParams = new URLSearchParams({
+      confidence_threshold: confidenceThreshold.toString(),
+    });
+
+    // Calls Vite dev proxy which forwards /api/detect to FastAPI at http://127.0.0.1:8000/api/detect
+    const res = await fetch(`/api/detect?${queryParams}`, {
       method: 'POST',
       body: formData
     });
@@ -24,15 +29,17 @@ export async function detectFridgeItems(imageBlob) {
       let errMsg = `Detection failed with status: ${res.status}`;
       try {
         const errJson = await res.json();
-        if (errJson && errJson.error) errMsg = errJson.error;
+        if (errJson && errJson.detail) errMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+        else if (errJson && errJson.error) errMsg = errJson.error;
       } catch (_) {}
       throw new Error(errMsg);
     }
     const data = await res.json();
-    return data;
+    // Return detections array if backend returned DetectResponse format
+    return data.detections || data;
   } catch (err) {
     if (fallbackToMock) {
-      console.warn('[API Service] Backend /detect offline, using local mock detections.');
+      console.warn('[API Service] Backend /api/detect offline, using local mock detections.');
       await new Promise((r) => setTimeout(r, 600));
       return INITIAL_DETECTIONS;
     }
@@ -80,10 +87,22 @@ export async function getInventory() {
 export async function saveInventory(items) {
   localStorage.setItem('fridge_inventory', JSON.stringify(items));
   try {
-    const res = await fetch('/api/inventory', {
+    const formattedItems = items.map((it) => ({
+      food_class: it.label || it.food_class,
+      custom_name: it.custom_name || (it.label ? it.label.replace(/_/g, ' ') : null),
+      package_state: it.packageState || it.package_state || 'sealed',
+      storage_location: it.storage_location || 'refrigerator',
+      shelf_life_days: it.days || it.shelf_life_days || 7,
+      verified: Boolean(it.verified || it.userEdited),
+      confidence: it.confidence !== undefined ? it.confidence : 1.0,
+      bbox: it.bbox || null,
+      user_notes: it.user_notes || null
+    }));
+
+    const res = await fetch('/api/inventory/batch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items })
+      body: JSON.stringify({ items: formattedItems })
     });
     if (!res.ok) throw new Error('Failed to save to backend');
     return await res.json();
