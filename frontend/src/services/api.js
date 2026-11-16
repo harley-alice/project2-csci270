@@ -31,7 +31,7 @@ export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.25) {
         const errJson = await res.json();
         if (errJson && errJson.detail) errMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
         else if (errJson && errJson.error) errMsg = errJson.error;
-      } catch (_) {}
+      } catch (_) { }
       throw new Error(errMsg);
     }
     const data = await res.json();
