@@ -83,10 +83,27 @@ class TestFridgeTrackerBackend(unittest.TestCase):
         self.assertEqual(milk_opened["recommended_shelf_life_days"], 5)
         self.assertLess(milk_opened["expiration_date"], milk_sealed["expiration_date"])
 
-        # 3. Jar: Special container requiring user confirmation
+        # 3. Jar and Soda Can: Unidentified containers requiring user confirmation without dates
         jar_rule = rule_engine.calculate_expiration("jar", package_state="sealed")
         self.assertTrue(jar_rule["is_container"])
         self.assertTrue(jar_rule["requires_user_detail"])
+        self.assertIsNone(jar_rule["shelf_life_days_min"])
+        self.assertIsNone(jar_rule["shelf_life_days_max"])
+        self.assertIsNone(jar_rule["recommended_shelf_life_days"])
+        self.assertIsNone(jar_rule["expiration_date"])
+        self.assertIsNone(jar_rule["earliest_expiration_date"])
+        self.assertIsNone(jar_rule["latest_expiration_date"])
+        self.assertEqual(jar_rule["safety_tier"], "special")
+        self.assertEqual(jar_rule["category_name"], "Unidentified Containers")
+
+        can_rule = rule_engine.calculate_expiration("soda_can", package_state="sealed")
+        self.assertEqual(can_rule["food_class"], "soda_can")
+        self.assertTrue(can_rule["is_container"])
+        self.assertTrue(can_rule["requires_user_detail"])
+        self.assertIsNone(can_rule["shelf_life_days_min"])
+        self.assertIsNone(can_rule["recommended_shelf_life_days"])
+        self.assertIsNone(can_rule["expiration_date"])
+        self.assertEqual(can_rule["category_name"], "Unidentified Containers")
 
     def test_03_inference_raw_image_to_tensor(self):
         """Test raw image upload processing, tensor transformation, and inference pipeline."""

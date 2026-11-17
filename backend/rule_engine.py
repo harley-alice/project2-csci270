@@ -20,8 +20,10 @@ CLASS_ALIASES = {
     "heavy_cream": "cream",
     "milk_carton": "milk",
     "yogurt_container": "yogurt",
-    "soda_can": "jar",
 }
+
+# Unidentified container classes that require user confirmation before determining contents/shelf-life
+CONTAINER_CLASSES = {"jar", "soda_can"}
 
 # Standard default values when a food class is not found
 CONSERVATIVE_FALLBACK = {
@@ -110,6 +112,43 @@ class FoodKeeperRuleEngine:
         norm_loc = storage_location.strip().lower()
         if norm_loc not in ("refrigerator", "freezer", "pantry"):
             norm_loc = "refrigerator"
+
+        # Detect unidentified containers (e.g. jars, cans) before looking up
+        # FoodKeeper rules or applying fallback shelf-life estimates.
+        if norm_class in CONTAINER_CLASSES:
+            if norm_class == "jar":
+                detail_prompt = (
+                    "A jar is a container. Please specify contents "
+                    "(e.g. jam, pickles, pasta sauce, salsa, mayonnaise) to determine shelf life."
+                )
+            else:
+                detail_prompt = (
+                    f"A {norm_class.replace('_', ' ')} is an unidentified container. "
+                    "Please specify contents to determine shelf life."
+                )
+
+            return {
+                "food_class": norm_class,
+                "display_name": norm_class.replace("_", " ").title(),
+                "package_state": norm_pkg,
+                "storage_location": norm_loc,
+                "is_cooked": is_cooked,
+                "start_date": start_date.isoformat(),
+                "shelf_life_days_min": None,
+                "shelf_life_days_max": None,
+                "recommended_shelf_life_days": None,
+                "expiration_date": None,
+                "earliest_expiration_date": None,
+                "latest_expiration_date": None,
+                "safety_tier": "special",
+                "category_name": "Unidentified Containers",
+                "requires_user_detail": True,
+                "detail_prompt": detail_prompt,
+                "usda_guidance": "Unidentified container: Requires user verification of contents before calculating FoodKeeper storage windows.",
+                "is_container": True,
+                "is_high_risk": False,
+                "is_urgent": False,
+            }
 
         # Search in-memory cache first
         rule = self._rules_cache.get((norm_class, norm_pkg, norm_loc, is_cooked))
@@ -208,7 +247,7 @@ class FoodKeeperRuleEngine:
         latest_exp = start_date + timedelta(days=days_max)
         rec_exp = start_date + timedelta(days=days_rec)
 
-        is_container = (norm_class == "jar")
+        is_container = (norm_class in CONTAINER_CLASSES)
         is_high_risk = (safety_tier == "tier_1")
         is_urgent = (days_rec <= 3)
 

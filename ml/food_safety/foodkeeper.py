@@ -21,6 +21,9 @@ DEFAULT_MAPPING_PATH = (
     PROJECT_ROOT / "ml" / "configs" / "foodkeeper_mapping.yaml"
 )
 
+# Unidentified container classes excluded from food recommendations
+EXCLUDED_CONTAINER_CLASSES = {"jar", "soda_can"}
+
 
 # --------------------------------------------------
 # Text and ID normalization
@@ -355,6 +358,10 @@ def get_recommendations(
     returned through broad name searches.
     """
 
+    norm_class = str(food_class).strip().lower().replace("-", "_")
+    if norm_class in EXCLUDED_CONTAINER_CLASSES:
+        return []
+
     if records is None:
         records = load_foodkeeper(data_path)
 
@@ -455,6 +462,20 @@ def get_foodkeeper_selection(
     A class with requires_user_detail=True must have both a
     selected Product ID and explicit user confirmation.
     """
+
+    norm_class = str(food_class).strip().lower().replace("-", "_")
+    if norm_class in EXCLUDED_CONTAINER_CLASSES:
+        return {
+            "food_class": norm_class,
+            "candidates": [],
+            "requires_confirmation": True,
+            "confirmation_prompt": (
+                f"A {norm_class.replace('_', ' ')} is an unidentified container. "
+                "Please specify and confirm its contents before retrieving food safety guidance."
+            ),
+            "selected_record": None,
+            "ready_for_guidance": False,
+        }
 
     if records is None:
         records = load_foodkeeper(data_path)
@@ -584,6 +605,13 @@ def get_confirmed_storage_guidance(
     Return storage guidance only after a specific FoodKeeper
     product has passed the confirmation workflow.
     """
+
+    food_class = str(selection.get("food_class", "")).strip().lower().replace("-", "_")
+    if food_class in EXCLUDED_CONTAINER_CLASSES:
+        raise ValueError(
+            f"Cannot provide food storage guidance for unidentified container '{food_class}'. "
+            "Contents must be identified first."
+        )
 
     if not selection.get("ready_for_guidance"):
         raise ValueError(
