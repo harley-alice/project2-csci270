@@ -1,0 +1,1510 @@
+{
+  "setup": {
+    "images": 160,
+    "gt_boxes": 965,
+    "classes_used": 30,
+    "empty_images": 26,
+    "exif_counts": {
+      "1": 67,
+      "6": 93
+    },
+    "rotated_images": 93,
+    "median_long_side": 4032,
+    "min_long_side": 660,
+    "max_long_side": 5712,
+    "class_order_ok": true,
+    "unmapped_class_ids": {}
+  },
+  "ashton": {
+    "raw_frame": {
+      "0.5": {
+        "gt": 965,
+        "localized": 67,
+        "loc_recall": 0.0694300518134715,
+        "class_correct_share": 0.22388059701492538,
+        "e2e_matched": 15,
+        "e2e_recall": 0.015544041450777202,
+        "preds_per_image": 2.83125,
+        "mean_conf_matched": 0.5291776119402984
+      },
+      "0.3": {
+        "gt": 965,
+        "localized": 81,
+        "loc_recall": 0.08393782383419689,
+        "class_correct_share": 0.18518518518518517,
+        "e2e_matched": 15,
+        "e2e_recall": 0.015544041450777202,
+        "preds_per_image": 2.83125,
+        "mean_conf_matched": 0.5292049382716051
+      },
+      "0.1": {
+        "gt": 965,
+        "localized": 137,
+        "loc_recall": 0.14196891191709846,
+        "class_correct_share": 0.15328467153284672,
+        "e2e_matched": 21,
+        "e2e_recall": 0.021761658031088083,
+        "preds_per_image": 2.83125,
+        "mean_conf_matched": 0.5090109489051096
+      }
+    },
+    "display_frame": {
+      "0.5": {
+        "gt": 965,
+        "localized": 142,
+        "loc_recall": 0.14715025906735751,
+        "class_correct_share": 0.2746478873239437,
+        "e2e_matched": 39,
+        "e2e_recall": 0.04041450777202073,
+        "preds_per_image": 2.83125,
+        "mean_conf_matched": 0.5085535211267604
+      },
+      "0.3": {
+        "gt": 965,
+        "localized": 165,
+        "loc_recall": 0.17098445595854922,
+        "class_correct_share": 0.24242424242424243,
+        "e2e_matched": 41,
+        "e2e_recall": 0.04248704663212435,
+        "preds_per_image": 2.83125,
+        "mean_conf_matched": 0.4989187878787878
+      },
+      "0.1": {
+        "gt": 965,
+        "localized": 185,
+        "loc_recall": 0.19170984455958548,
+        "class_correct_share": 0.22702702702702704,
+        "e2e_matched": 43,
+        "e2e_recall": 0.04455958549222798,
+        "preds_per_image": 2.83125,
+        "mean_conf_matched": 0.49587891891891883
+      }
+    },
+    "her_tp": 15
+  },
+  "matrix": {
+    "upright_640_conf0.001": {
+      "subset": "upright",
+      "imgsz": 640,
+      "conf": 0.001,
+      "metrics": {
+        "0.5": {
+          "gt": 965,
+          "localized": 725,
+          "loc_recall": 0.7512953367875648,
+          "class_correct_share": 0.16275862068965516,
+          "e2e_matched": 221,
+          "e2e_recall": 0.22901554404145077,
+          "preds_per_image": 161.29375,
+          "mean_conf_matched": 0.13834523799732842
+        },
+        "0.3": {
+          "gt": 965,
+          "localized": 828,
+          "loc_recall": 0.8580310880829015,
+          "class_correct_share": 0.1497584541062802,
+          "e2e_matched": 249,
+          "e2e_recall": 0.25803108808290154,
+          "preds_per_image": 161.29375,
+          "mean_conf_matched": 0.1374304456717013
+        },
+        "0.1": {
+          "gt": 965,
+          "localized": 922,
+          "loc_recall": 0.9554404145077721,
+          "class_correct_share": 0.14967462039045554,
+          "e2e_matched": 285,
+          "e2e_recall": 0.29533678756476683,
+          "preds_per_image": 161.29375,
+          "mean_conf_matched": 0.14109305833888577
+        }
+      },
+      "buckets": {
+        "<0.5%": {
+          "n": 289,
+          "loc": 163,
+          "e2e": 46
+        },
+        "0.5-2%": {
+          "n": 501,
+          "loc": 405,
+          "e2e": 117
+        },
+        "2-8%": {
+          "n": 173,
+          "loc": 155,
+          "e2e": 56
+        },
+        ">8%": {
+          "n": 2,
+          "loc": 2,
+          "e2e": 2
+        }
+      },
+      "classes": {
+        "jar": {
+          "n": 302,
+          "loc": 235,
+          "e2e": 24
+        },
+        "egg": {
+          "n": 92,
+          "loc": 76,
+          "e2e": 38
+        },
+        "yogurt": {
+          "n": 76,
+          "loc": 54,
+          "e2e": 26
+        },
+        "milk": {
+          "n": 91,
+          "loc": 78,
+          "e2e": 53
+        },
+        "cream": {
+          "n": 54,
+          "loc": 51,
+          "e2e": 6
+        },
+        "bread": {
+          "n": 6,
+          "loc": 6,
+          "e2e": 1
+        },
+        "spinach": {
+          "n": 15,
+          "loc": 12,
+          "e2e": 2
+        },
+        "cheese": {
+          "n": 94,
+          "loc": 72,
+          "e2e": 33
+        },
+        "avocado": {
+          "n": 16,
+          "loc": 7,
+          "e2e": 1
+        },
+        "apple": {
+          "n": 51,
+          "loc": 18,
+          "e2e": 2
+        },
+        "banana": {
+          "n": 1,
+          "loc": 1,
+          "e2e": 0
+        },
+        "butter": {
+          "n": 63,
+          "loc": 42,
+          "e2e": 13
+        },
+        "beef": {
+          "n": 9,
+          "loc": 8,
+          "e2e": 1
+        },
+        "chicken": {
+          "n": 12,
+          "loc": 11,
+          "e2e": 2
+        },
+        "lime": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 1
+        },
+        "pomegranate": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "bell_pepper": {
+          "n": 7,
+          "loc": 5,
+          "e2e": 1
+        },
+        "onion": {
+          "n": 9,
+          "loc": 8,
+          "e2e": 0
+        },
+        "lemon": {
+          "n": 10,
+          "loc": 9,
+          "e2e": 4
+        },
+        "bacon": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "orange": {
+          "n": 5,
+          "loc": 0,
+          "e2e": 0
+        },
+        "corn": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "chocolate": {
+          "n": 7,
+          "loc": 6,
+          "e2e": 0
+        },
+        "tomato": {
+          "n": 11,
+          "loc": 10,
+          "e2e": 8
+        },
+        "carrot": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 0
+        },
+        "mushrooms": {
+          "n": 3,
+          "loc": 3,
+          "e2e": 0
+        },
+        "blueberries": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 1
+        },
+        "strawberries": {
+          "n": 9,
+          "loc": 9,
+          "e2e": 4
+        },
+        "ham": {
+          "n": 1,
+          "loc": 1,
+          "e2e": 0
+        },
+        "mango": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        }
+      }
+    },
+    "upright_960_conf0.001": {
+      "subset": "upright",
+      "imgsz": 960,
+      "conf": 0.001,
+      "metrics": {
+        "0.5": {
+          "gt": 965,
+          "localized": 732,
+          "loc_recall": 0.7585492227979275,
+          "class_correct_share": 0.1912568306010929,
+          "e2e_matched": 232,
+          "e2e_recall": 0.24041450777202072,
+          "preds_per_image": 183.55625,
+          "mean_conf_matched": 0.1518224661117305
+        },
+        "0.3": {
+          "gt": 965,
+          "localized": 846,
+          "loc_recall": 0.8766839378238342,
+          "class_correct_share": 0.18321513002364065,
+          "e2e_matched": 277,
+          "e2e_recall": 0.28704663212435233,
+          "preds_per_image": 183.55625,
+          "mean_conf_matched": 0.1508557904933042
+        },
+        "0.1": {
+          "gt": 965,
+          "localized": 922,
+          "loc_recall": 0.9554404145077721,
+          "class_correct_share": 0.16594360086767895,
+          "e2e_matched": 317,
+          "e2e_recall": 0.32849740932642485,
+          "preds_per_image": 183.55625,
+          "mean_conf_matched": 0.16325198515525913
+        }
+      },
+      "buckets": {
+        "<0.5%": {
+          "n": 289,
+          "loc": 189,
+          "e2e": 64
+        },
+        "0.5-2%": {
+          "n": 501,
+          "loc": 401,
+          "e2e": 113
+        },
+        "2-8%": {
+          "n": 173,
+          "loc": 140,
+          "e2e": 54
+        },
+        ">8%": {
+          "n": 2,
+          "loc": 2,
+          "e2e": 1
+        }
+      },
+      "classes": {
+        "jar": {
+          "n": 302,
+          "loc": 242,
+          "e2e": 33
+        },
+        "egg": {
+          "n": 92,
+          "loc": 76,
+          "e2e": 45
+        },
+        "yogurt": {
+          "n": 76,
+          "loc": 58,
+          "e2e": 37
+        },
+        "milk": {
+          "n": 91,
+          "loc": 74,
+          "e2e": 58
+        },
+        "cream": {
+          "n": 54,
+          "loc": 46,
+          "e2e": 0
+        },
+        "bread": {
+          "n": 6,
+          "loc": 6,
+          "e2e": 2
+        },
+        "spinach": {
+          "n": 15,
+          "loc": 12,
+          "e2e": 2
+        },
+        "cheese": {
+          "n": 94,
+          "loc": 70,
+          "e2e": 21
+        },
+        "avocado": {
+          "n": 16,
+          "loc": 7,
+          "e2e": 0
+        },
+        "apple": {
+          "n": 51,
+          "loc": 25,
+          "e2e": 8
+        },
+        "banana": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "butter": {
+          "n": 63,
+          "loc": 45,
+          "e2e": 7
+        },
+        "beef": {
+          "n": 9,
+          "loc": 7,
+          "e2e": 2
+        },
+        "chicken": {
+          "n": 12,
+          "loc": 12,
+          "e2e": 1
+        },
+        "lime": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 0
+        },
+        "pomegranate": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "bell_pepper": {
+          "n": 7,
+          "loc": 6,
+          "e2e": 0
+        },
+        "onion": {
+          "n": 9,
+          "loc": 7,
+          "e2e": 0
+        },
+        "lemon": {
+          "n": 10,
+          "loc": 10,
+          "e2e": 4
+        },
+        "bacon": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "orange": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 0
+        },
+        "corn": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "chocolate": {
+          "n": 7,
+          "loc": 5,
+          "e2e": 0
+        },
+        "tomato": {
+          "n": 11,
+          "loc": 8,
+          "e2e": 8
+        },
+        "carrot": {
+          "n": 5,
+          "loc": 2,
+          "e2e": 0
+        },
+        "mushrooms": {
+          "n": 3,
+          "loc": 2,
+          "e2e": 0
+        },
+        "blueberries": {
+          "n": 5,
+          "loc": 3,
+          "e2e": 1
+        },
+        "strawberries": {
+          "n": 9,
+          "loc": 7,
+          "e2e": 3
+        },
+        "ham": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "mango": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        }
+      }
+    },
+    "upright_1280_conf0.001": {
+      "subset": "upright",
+      "imgsz": 1280,
+      "conf": 0.001,
+      "metrics": {
+        "0.5": {
+          "gt": 965,
+          "localized": 702,
+          "loc_recall": 0.7274611398963731,
+          "class_correct_share": 0.254985754985755,
+          "e2e_matched": 253,
+          "e2e_recall": 0.2621761658031088,
+          "preds_per_image": 242.05,
+          "mean_conf_matched": 0.1676943617006578
+        },
+        "0.3": {
+          "gt": 965,
+          "localized": 840,
+          "loc_recall": 0.8704663212435233,
+          "class_correct_share": 0.2226190476190476,
+          "e2e_matched": 294,
+          "e2e_recall": 0.30466321243523314,
+          "preds_per_image": 242.05,
+          "mean_conf_matched": 0.16123486672225962
+        },
+        "0.1": {
+          "gt": 965,
+          "localized": 929,
+          "loc_recall": 0.9626943005181348,
+          "class_correct_share": 0.2077502691065662,
+          "e2e_matched": 349,
+          "e2e_recall": 0.3616580310880829,
+          "preds_per_image": 242.05,
+          "mean_conf_matched": 0.17809064358393126
+        }
+      },
+      "buckets": {
+        "<0.5%": {
+          "n": 289,
+          "loc": 197,
+          "e2e": 83
+        },
+        "0.5-2%": {
+          "n": 501,
+          "loc": 374,
+          "e2e": 118
+        },
+        "2-8%": {
+          "n": 173,
+          "loc": 129,
+          "e2e": 50
+        },
+        ">8%": {
+          "n": 2,
+          "loc": 2,
+          "e2e": 2
+        }
+      },
+      "classes": {
+        "jar": {
+          "n": 302,
+          "loc": 225,
+          "e2e": 37
+        },
+        "egg": {
+          "n": 92,
+          "loc": 80,
+          "e2e": 49
+        },
+        "yogurt": {
+          "n": 76,
+          "loc": 59,
+          "e2e": 44
+        },
+        "milk": {
+          "n": 91,
+          "loc": 71,
+          "e2e": 59
+        },
+        "cream": {
+          "n": 54,
+          "loc": 45,
+          "e2e": 0
+        },
+        "bread": {
+          "n": 6,
+          "loc": 3,
+          "e2e": 2
+        },
+        "spinach": {
+          "n": 15,
+          "loc": 13,
+          "e2e": 0
+        },
+        "cheese": {
+          "n": 94,
+          "loc": 65,
+          "e2e": 20
+        },
+        "avocado": {
+          "n": 16,
+          "loc": 6,
+          "e2e": 0
+        },
+        "apple": {
+          "n": 51,
+          "loc": 21,
+          "e2e": 12
+        },
+        "banana": {
+          "n": 1,
+          "loc": 1,
+          "e2e": 0
+        },
+        "butter": {
+          "n": 63,
+          "loc": 38,
+          "e2e": 10
+        },
+        "beef": {
+          "n": 9,
+          "loc": 7,
+          "e2e": 0
+        },
+        "chicken": {
+          "n": 12,
+          "loc": 9,
+          "e2e": 0
+        },
+        "lime": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 0
+        },
+        "pomegranate": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "bell_pepper": {
+          "n": 7,
+          "loc": 6,
+          "e2e": 1
+        },
+        "onion": {
+          "n": 9,
+          "loc": 6,
+          "e2e": 0
+        },
+        "lemon": {
+          "n": 10,
+          "loc": 10,
+          "e2e": 4
+        },
+        "bacon": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "orange": {
+          "n": 5,
+          "loc": 3,
+          "e2e": 0
+        },
+        "corn": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "chocolate": {
+          "n": 7,
+          "loc": 6,
+          "e2e": 0
+        },
+        "tomato": {
+          "n": 11,
+          "loc": 10,
+          "e2e": 9
+        },
+        "carrot": {
+          "n": 5,
+          "loc": 3,
+          "e2e": 0
+        },
+        "mushrooms": {
+          "n": 3,
+          "loc": 2,
+          "e2e": 0
+        },
+        "blueberries": {
+          "n": 5,
+          "loc": 4,
+          "e2e": 3
+        },
+        "strawberries": {
+          "n": 9,
+          "loc": 7,
+          "e2e": 3
+        },
+        "ham": {
+          "n": 1,
+          "loc": 1,
+          "e2e": 0
+        },
+        "mango": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        }
+      }
+    },
+    "raw_640_conf0.001": {
+      "subset": "raw",
+      "imgsz": 640,
+      "conf": 0.001,
+      "metrics": {
+        "0.5": {
+          "gt": 965,
+          "localized": 583,
+          "loc_recall": 0.6041450777202072,
+          "class_correct_share": 0.13379073756432247,
+          "e2e_matched": 145,
+          "e2e_recall": 0.15025906735751296,
+          "preds_per_image": 187.5125,
+          "mean_conf_matched": 0.10604066822851975
+        },
+        "0.3": {
+          "gt": 965,
+          "localized": 711,
+          "loc_recall": 0.7367875647668394,
+          "class_correct_share": 0.12376933895921238,
+          "e2e_matched": 178,
+          "e2e_recall": 0.1844559585492228,
+          "preds_per_image": 187.5125,
+          "mean_conf_matched": 0.10190989060734128
+        },
+        "0.1": {
+          "gt": 965,
+          "localized": 878,
+          "loc_recall": 0.9098445595854923,
+          "class_correct_share": 0.1275626423690205,
+          "e2e_matched": 232,
+          "e2e_recall": 0.24041450777202072,
+          "preds_per_image": 187.5125,
+          "mean_conf_matched": 0.10584565056387149
+        }
+      },
+      "buckets": {
+        "<0.5%": {
+          "n": 289,
+          "loc": 109,
+          "e2e": 28
+        },
+        "0.5-2%": {
+          "n": 501,
+          "loc": 330,
+          "e2e": 81
+        },
+        "2-8%": {
+          "n": 173,
+          "loc": 142,
+          "e2e": 34
+        },
+        ">8%": {
+          "n": 2,
+          "loc": 2,
+          "e2e": 2
+        }
+      },
+      "classes": {
+        "jar": {
+          "n": 302,
+          "loc": 184,
+          "e2e": 7
+        },
+        "egg": {
+          "n": 92,
+          "loc": 59,
+          "e2e": 21
+        },
+        "yogurt": {
+          "n": 76,
+          "loc": 41,
+          "e2e": 18
+        },
+        "milk": {
+          "n": 91,
+          "loc": 69,
+          "e2e": 29
+        },
+        "cream": {
+          "n": 54,
+          "loc": 41,
+          "e2e": 3
+        },
+        "bread": {
+          "n": 6,
+          "loc": 6,
+          "e2e": 1
+        },
+        "spinach": {
+          "n": 15,
+          "loc": 3,
+          "e2e": 0
+        },
+        "cheese": {
+          "n": 94,
+          "loc": 62,
+          "e2e": 32
+        },
+        "avocado": {
+          "n": 16,
+          "loc": 8,
+          "e2e": 1
+        },
+        "apple": {
+          "n": 51,
+          "loc": 10,
+          "e2e": 3
+        },
+        "banana": {
+          "n": 1,
+          "loc": 1,
+          "e2e": 0
+        },
+        "butter": {
+          "n": 63,
+          "loc": 36,
+          "e2e": 14
+        },
+        "beef": {
+          "n": 9,
+          "loc": 8,
+          "e2e": 1
+        },
+        "chicken": {
+          "n": 12,
+          "loc": 11,
+          "e2e": 1
+        },
+        "lime": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 1
+        },
+        "pomegranate": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "bell_pepper": {
+          "n": 7,
+          "loc": 5,
+          "e2e": 1
+        },
+        "onion": {
+          "n": 9,
+          "loc": 6,
+          "e2e": 0
+        },
+        "lemon": {
+          "n": 10,
+          "loc": 7,
+          "e2e": 3
+        },
+        "bacon": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "orange": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 0
+        },
+        "corn": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "chocolate": {
+          "n": 7,
+          "loc": 4,
+          "e2e": 0
+        },
+        "tomato": {
+          "n": 11,
+          "loc": 8,
+          "e2e": 6
+        },
+        "carrot": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 0
+        },
+        "mushrooms": {
+          "n": 3,
+          "loc": 1,
+          "e2e": 0
+        },
+        "blueberries": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 1
+        },
+        "strawberries": {
+          "n": 9,
+          "loc": 8,
+          "e2e": 2
+        },
+        "ham": {
+          "n": 1,
+          "loc": 1,
+          "e2e": 0
+        },
+        "mango": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        }
+      }
+    },
+    "upright_640_conf0.25": {
+      "subset": "upright",
+      "imgsz": 640,
+      "conf": 0.25,
+      "metrics": {
+        "0.5": {
+          "gt": 965,
+          "localized": 135,
+          "loc_recall": 0.13989637305699482,
+          "class_correct_share": 0.22962962962962963,
+          "e2e_matched": 32,
+          "e2e_recall": 0.03316062176165803,
+          "preds_per_image": 3.05625,
+          "mean_conf_matched": 0.5138210276762645
+        },
+        "0.3": {
+          "gt": 965,
+          "localized": 151,
+          "loc_recall": 0.15647668393782382,
+          "class_correct_share": 0.2185430463576159,
+          "e2e_matched": 34,
+          "e2e_recall": 0.035233160621761656,
+          "preds_per_image": 3.05625,
+          "mean_conf_matched": 0.5065891178238471
+        },
+        "0.1": {
+          "gt": 965,
+          "localized": 175,
+          "loc_recall": 0.18134715025906736,
+          "class_correct_share": 0.2057142857142857,
+          "e2e_matched": 38,
+          "e2e_recall": 0.039378238341968914,
+          "preds_per_image": 3.05625,
+          "mean_conf_matched": 0.49918561952454704
+        }
+      },
+      "buckets": {
+        "<0.5%": {
+          "n": 289,
+          "loc": 22,
+          "e2e": 8
+        },
+        "0.5-2%": {
+          "n": 501,
+          "loc": 76,
+          "e2e": 9
+        },
+        "2-8%": {
+          "n": 173,
+          "loc": 35,
+          "e2e": 14
+        },
+        ">8%": {
+          "n": 2,
+          "loc": 2,
+          "e2e": 1
+        }
+      },
+      "classes": {
+        "jar": {
+          "n": 302,
+          "loc": 56,
+          "e2e": 1
+        },
+        "egg": {
+          "n": 92,
+          "loc": 9,
+          "e2e": 3
+        },
+        "yogurt": {
+          "n": 76,
+          "loc": 8,
+          "e2e": 4
+        },
+        "milk": {
+          "n": 91,
+          "loc": 19,
+          "e2e": 17
+        },
+        "cream": {
+          "n": 54,
+          "loc": 20,
+          "e2e": 0
+        },
+        "bread": {
+          "n": 6,
+          "loc": 0,
+          "e2e": 0
+        },
+        "spinach": {
+          "n": 15,
+          "loc": 0,
+          "e2e": 0
+        },
+        "cheese": {
+          "n": 94,
+          "loc": 8,
+          "e2e": 1
+        },
+        "avocado": {
+          "n": 16,
+          "loc": 0,
+          "e2e": 0
+        },
+        "apple": {
+          "n": 51,
+          "loc": 0,
+          "e2e": 0
+        },
+        "banana": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "butter": {
+          "n": 63,
+          "loc": 2,
+          "e2e": 1
+        },
+        "beef": {
+          "n": 9,
+          "loc": 1,
+          "e2e": 0
+        },
+        "chicken": {
+          "n": 12,
+          "loc": 2,
+          "e2e": 0
+        },
+        "lime": {
+          "n": 5,
+          "loc": 0,
+          "e2e": 0
+        },
+        "pomegranate": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "bell_pepper": {
+          "n": 7,
+          "loc": 1,
+          "e2e": 0
+        },
+        "onion": {
+          "n": 9,
+          "loc": 1,
+          "e2e": 0
+        },
+        "lemon": {
+          "n": 10,
+          "loc": 1,
+          "e2e": 0
+        },
+        "bacon": {
+          "n": 2,
+          "loc": 0,
+          "e2e": 0
+        },
+        "orange": {
+          "n": 5,
+          "loc": 0,
+          "e2e": 0
+        },
+        "corn": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "chocolate": {
+          "n": 7,
+          "loc": 1,
+          "e2e": 0
+        },
+        "tomato": {
+          "n": 11,
+          "loc": 4,
+          "e2e": 4
+        },
+        "carrot": {
+          "n": 5,
+          "loc": 0,
+          "e2e": 0
+        },
+        "mushrooms": {
+          "n": 3,
+          "loc": 0,
+          "e2e": 0
+        },
+        "blueberries": {
+          "n": 5,
+          "loc": 1,
+          "e2e": 0
+        },
+        "strawberries": {
+          "n": 9,
+          "loc": 1,
+          "e2e": 1
+        },
+        "ham": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        },
+        "mango": {
+          "n": 1,
+          "loc": 0,
+          "e2e": 0
+        }
+      }
+    }
+  },
+  "val_control": {
+    "640": {
+      "mAP50": 0.03453604723152996,
+      "mAP50_95": 0.017673923883714315,
+      "precision": 0.1766175972863457,
+      "recall": 0.04486464457344782
+    },
+    "960": {
+      "mAP50": 0.02737424579698986,
+      "mAP50_95": 0.014819819546187597,
+      "precision": 0.17575143097838214,
+      "recall": 0.04768443981426171
+    },
+    "1280": {
+      "mAP50": 0.03651653387931959,
+      "mAP50_95": 0.023126629634489273,
+      "precision": 0.27620166507323085,
+      "recall": 0.046122646657146514
+    }
+  },
+  "val_note": "Ultralytics' recall at its own F1-optimal confidence (0.045 at 640 px) is the same order as my end-to-end recall at the deployed conf 0.25 (3.3%) and far below my end-to-end recall at conf 0.001 (22.9%). The mAP is low (0.027-0.037) because correct-class matches carry low confidence (mean confidence of matched boxes 0.138 at 640 px). mAP does not follow my recall ordering across image sizes, so treat small differences between sizes as noise. The control reads the same labels with the same class order and shows the same low end-to-end picture, and my localization recall (75.1% at 640 px) shows the boxes line up with the photos, so there is no sign of a label-format or class-order bug.",
+  "train_sizes": {
+    "boxes": 8604,
+    "median_area": 0.021954224879,
+    "bucket_share": {
+      "<0.5%": 0.0399814039981404,
+      "0.5-2%": 0.43317061831706183,
+      "2-8%": 0.3780799628079963,
+      ">8%": 0.1487680148768015
+    }
+  },
+  "real_sizes": {
+    "boxes": 965,
+    "median_area": 0.009230804872,
+    "bucket_share": {
+      "<0.5%": 0.2994818652849741,
+      "0.5-2%": 0.5191709844559586,
+      "2-8%": 0.17927461139896372,
+      ">8%": 0.002072538860103627
+    },
+    "median_side_at_640": 51.1862602914493
+  },
+  "class_rows": [
+    {
+      "class": "milk",
+      "n": 91,
+      "r960": "81.3% / 63.7%",
+      "r640": "85.7% / 58.2%",
+      "note": ""
+    },
+    {
+      "class": "egg",
+      "n": 92,
+      "r960": "82.6% / 48.9%",
+      "r640": "82.6% / 41.3%",
+      "note": ""
+    },
+    {
+      "class": "jar",
+      "n": 302,
+      "r960": "80.1% / 10.9%",
+      "r640": "77.8% / 7.9%",
+      "note": ""
+    },
+    {
+      "class": "cream",
+      "n": 54,
+      "r960": "85.2% / 0.0%",
+      "r640": "94.4% / 11.1%",
+      "note": ""
+    },
+    {
+      "class": "butter",
+      "n": 63,
+      "r960": "71.4% / 11.1%",
+      "r640": "66.7% / 20.6%",
+      "note": ""
+    },
+    {
+      "class": "yogurt",
+      "n": 76,
+      "r960": "76.3% / 48.7%",
+      "r640": "71.1% / 34.2%",
+      "note": ""
+    },
+    {
+      "class": "chicken",
+      "n": 12,
+      "r960": "100.0% / 8.3%",
+      "r640": "91.7% / 16.7%",
+      "note": ""
+    },
+    {
+      "class": "beef",
+      "n": 9,
+      "r960": "77.8% / 22.2%",
+      "r640": "88.9% / 11.1%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "cheese",
+      "n": 94,
+      "r960": "74.5% / 22.3%",
+      "r640": "76.6% / 35.1%",
+      "note": ""
+    },
+    {
+      "class": "apple",
+      "n": 51,
+      "r960": "49.0% / 15.7%",
+      "r640": "35.3% / 3.9%",
+      "note": ""
+    },
+    {
+      "class": "avocado",
+      "n": 16,
+      "r960": "43.8% / 0.0%",
+      "r640": "43.8% / 6.2%",
+      "note": ""
+    },
+    {
+      "class": "spinach",
+      "n": 15,
+      "r960": "80.0% / 13.3%",
+      "r640": "80.0% / 13.3%",
+      "note": ""
+    },
+    {
+      "class": "tomato",
+      "n": 11,
+      "r960": "72.7% / 72.7%",
+      "r640": "90.9% / 72.7%",
+      "note": ""
+    },
+    {
+      "class": "lemon",
+      "n": 10,
+      "r960": "100.0% / 40.0%",
+      "r640": "90.0% / 40.0%",
+      "note": ""
+    },
+    {
+      "class": "onion",
+      "n": 9,
+      "r960": "77.8% / 0.0%",
+      "r640": "88.9% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "strawberries",
+      "n": 9,
+      "r960": "77.8% / 33.3%",
+      "r640": "100.0% / 44.4%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "bell_pepper",
+      "n": 7,
+      "r960": "85.7% / 0.0%",
+      "r640": "71.4% / 14.3%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "chocolate",
+      "n": 7,
+      "r960": "71.4% / 0.0%",
+      "r640": "85.7% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "bread",
+      "n": 6,
+      "r960": "100.0% / 33.3%",
+      "r640": "100.0% / 16.7%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "lime",
+      "n": 5,
+      "r960": "20.0% / 0.0%",
+      "r640": "20.0% / 20.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "orange",
+      "n": 5,
+      "r960": "20.0% / 0.0%",
+      "r640": "0.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "carrot",
+      "n": 5,
+      "r960": "40.0% / 0.0%",
+      "r640": "20.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "blueberries",
+      "n": 5,
+      "r960": "60.0% / 20.0%",
+      "r640": "20.0% / 20.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "mushrooms",
+      "n": 3,
+      "r960": "66.7% / 0.0%",
+      "r640": "100.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "pomegranate",
+      "n": 2,
+      "r960": "0.0% / 0.0%",
+      "r640": "0.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "bacon",
+      "n": 2,
+      "r960": "0.0% / 0.0%",
+      "r640": "0.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "banana",
+      "n": 1,
+      "r960": "0.0% / 0.0%",
+      "r640": "100.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "corn",
+      "n": 1,
+      "r960": "0.0% / 0.0%",
+      "r640": "0.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "ham",
+      "n": 1,
+      "r960": "0.0% / 0.0%",
+      "r640": "100.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "mango",
+      "n": 1,
+      "r960": "0.0% / 0.0%",
+      "r640": "0.0% / 0.0%",
+      "note": "low-support (<10 boxes)"
+    },
+    {
+      "class": "shrimp",
+      "n": 0,
+      "r960": "n/a",
+      "r640": "n/a",
+      "note": "no ground-truth boxes"
+    }
+  ],
+  "wrong_top5": [
+    [
+      "jar",
+      "milk",
+      63
+    ],
+    [
+      "jar",
+      "flour",
+      36
+    ],
+    [
+      "cream",
+      "milk",
+      33
+    ],
+    [
+      "jar",
+      "yogurt",
+      31
+    ],
+    [
+      "jar",
+      "sugar",
+      23
+    ]
+  ],
+  "factor_deltas_e2e": {
+    "EXIF orientation (model input rotated vs sideways, 640 px)": 0.07875647668393781,
+    "Confidence threshold (0.001 vs 0.25, 640 px upright)": 0.19585492227979273,
+    "Image size (1280 vs 640 px, conf 0.001 upright)": 0.03316062176165804,
+    "Evaluation frame (ground truth scaled by display vs raw size, Ashton's saved predictions)": 0.024870466321243526
+  },
+  "ranking_text": [
+    "1. **Confidence threshold (0.001 vs 0.25, 640 px upright):** end-to-end recall moves +19.6 points.",
+    "2. **EXIF orientation (model input rotated vs sideways, 640 px):** end-to-end recall moves +7.9 points.",
+    "3. **Image size (1280 vs 640 px, conf 0.001 upright):** end-to-end recall moves +3.3 points.",
+    "4. **Evaluation frame (ground truth scaled by display vs raw size, Ashton's saved predictions):** end-to-end recall moves +2.5 points.",
+    "- **Object size:** at 1280 px, end-to-end recall is <0.5%: 28.7%, 0.5-2%: 23.6%, 2-8%: 28.9%, >8%: 100.0% (GT counts 289, 501, 173, 2).",
+    "- **Class definitions:** at the best size, localization recall is 72.7% but end-to-end recall is 26.2%; among localized boxes 25.5% have the right class, so 46.5% of all ground-truth boxes are found but mislabeled."
+  ],
+  "overlays": {
+    "upright": [
+      {
+        "file": "upright_0.png",
+        "orientation": 6,
+        "gt_boxes": 2
+      },
+      {
+        "file": "upright_1.png",
+        "orientation": 1,
+        "gt_boxes": 0
+      },
+      {
+        "file": "upright_2.png",
+        "orientation": 1,
+        "gt_boxes": 1
+      },
+      {
+        "file": "upright_3.png",
+        "orientation": 1,
+        "gt_boxes": 8
+      },
+      {
+        "file": "upright_4.png",
+        "orientation": 6,
+        "gt_boxes": 6
+      },
+      {
+        "file": "upright_5.png",
+        "orientation": 1,
+        "gt_boxes": 11
+      }
+    ],
+    "raw": [
+      {
+        "file": "raw_0.png",
+        "orientation": 6,
+        "gt_boxes": 4
+      },
+      {
+        "file": "raw_1.png",
+        "orientation": 6,
+        "gt_boxes": 5
+      },
+      {
+        "file": "raw_2.png",
+        "orientation": 1,
+        "gt_boxes": 3
+      },
+      {
+        "file": "raw_3.png",
+        "orientation": 1,
+        "gt_boxes": 7
+      },
+      {
+        "file": "raw_4.png",
+        "orientation": 6,
+        "gt_boxes": 3
+      },
+      {
+        "file": "raw_5.png",
+        "orientation": 6,
+        "gt_boxes": 0
+      }
+    ]
+  }
+}
