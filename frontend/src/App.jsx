@@ -4,15 +4,30 @@ import { FOOD_CLASSES, INITIAL_DETECTIONS } from './mockData';
 import { estimateShelfLife, sendFeedback, detectFridgeItems, getInventory, saveInventory } from './services/api';
 import BoundingBoxOverlay from './components/BoundingBoxOverlay';
 
+// Sample stock fridge image for initial placeholder testing
 const SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80';
 
+/**
+ * CSCI 270 - Project 2: Food Expiration Predictor
+ * Frontend Lead: Alice Harley
+ * 
+ * 4-Step Interactive AI & Expiration Workflow:
+ *   1. Scan / Capture Photo (Camera stream or local file upload)
+ *   2. Review & Human-in-the-Loop Verification (YOLO bounding boxes + USDA shelf life)
+ *   3. Processing / Batch sync with SQLite database
+ *   4. Active Digital Fridge Dashboard (Tracking countdown & food safety advisories)
+ */
 export default function App() {
+  // ==============================================================================
+  // 1. STATE MANAGEMENT
+  // ==============================================================================
   // Steps: 1 = Capture, 2 = Review, 3 = Processing, 4 = Inventory
   const [step, setStep] = useState(1);
   const [image, setImage] = useState(SAMPLE_IMAGE);
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState(null);
   const [rawDetections, setRawDetections] = useState([]);
+  // Initial detection threshold slider (default 0.20 to catch edge cases)
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.20);
   const [tracking, setTracking] = useState([
     { id: 't1', label: 'yogurt', packageState: 'sealed', days: 14 },
@@ -27,21 +42,24 @@ export default function App() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
-  // Drawing bounding box state
+  // Drawing bounding box state for Human-in-the-loop Active Learning
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawingStart, setDrawingStart] = useState(null);
   const [currentBox, setCurrentBox] = useState(null);
   const imageContainerRef = useRef(null);
   const imgElementRef = useRef(null);
 
-  // Stop camera when navigating away from step 1
+  // ==============================================================================
+  // 2. CAMERA & IMAGE INGESTION
+  // ==============================================================================
+  // Stop camera stream when component unmounts
   useEffect(() => {
     return () => {
       stopCamera();
     };
   }, []);
 
-  // Load inventory from backend or local storage on initial mount
+  // Fetch persisted inventory from SQLite backend on initial page load
   useEffect(() => {
     async function loadInitialInventory() {
       try {
@@ -63,6 +81,7 @@ export default function App() {
     loadInitialInventory();
   }, []);
 
+  // Initialize live webcam / phone camera stream
   const startCamera = async () => {
     try {
       setIsCameraActive(true);
@@ -80,6 +99,7 @@ export default function App() {
     }
   };
 
+  // Turn off camera tracks to free hardware resources
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -88,6 +108,7 @@ export default function App() {
     setIsCameraActive(false);
   };
 
+  // Capture current video frame to canvas and trigger YOLO inference
   const capturePhoto = () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
@@ -124,6 +145,7 @@ export default function App() {
     }, 'image/jpeg');
   };
 
+  // Handle local image file upload (converts iOS HEIC/HEIF to JPEG in browser)
   const handleFile = async (e) => {
     let file = e.target.files[0];
     if (file) {
@@ -134,7 +156,7 @@ export default function App() {
       setStep(2);
 
       try {
-        // Convert HEIC / HEIF (standard iOS camera photos) to JPEG in the browser
+        // iOS camera photos typically save as HEIC; convert client-side before sending to PyTorch
         const lowerName = file.name.toLowerCase();
         const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
           lowerName.endsWith('.heic') || lowerName.endsWith('.heif');
@@ -155,6 +177,7 @@ export default function App() {
 
         setImage(URL.createObjectURL(file));
 
+        // Send photo to FastAPI /detect endpoint
         const results = await detectFridgeItems(file);
         setRawDetections(
           results.map((it) => ({
@@ -172,7 +195,10 @@ export default function App() {
     }
   };
 
-  // Re-label an existing item
+  // ==============================================================================
+  // 3. HUMAN-IN-THE-LOOP FEEDBACK & ACTIVE LEARNING
+  // ==============================================================================
+  // Re-label an existing item (user correction feedback hook for future retraining)
   const updateLabel = (id, newLabel) => {
     const targetItem = rawDetections.find((it) => it.id === id);
     if (!targetItem || targetItem.label === newLabel) return;
@@ -202,7 +228,7 @@ export default function App() {
     );
   };
 
-  // Toggle opened vs sealed package state
+  // Toggle opened vs sealed package state (updates USDA shelf life formula)
   const togglePackageState = (id, newState) => {
     setRawDetections((prev) =>
       prev.map((it) =>
@@ -233,7 +259,7 @@ export default function App() {
     );
   };
 
-  // Reject an incorrect bounding box (false positive)
+  // Reject a false positive detection (logs feedback event to suppress similar errors)
   const removeItem = (id) => {
     const targetItem = rawDetections.find((it) => it.id === id);
     if (targetItem) {
@@ -252,7 +278,7 @@ export default function App() {
     setRawDetections((prev) => prev.filter((it) => it.id !== id));
   };
 
-  // Add missed item (false negative / active learning hook)
+  // Add missed item (false negative / active learning hook for missed detections)
   const addMissedItem = (customBbox = null) => {
     const defaultLabel = 'apple';
     const newItem = {
@@ -280,6 +306,10 @@ export default function App() {
     setRawDetections((prev) => [...prev, newItem]);
   };
 
+  // ==============================================================================
+  // 4. INTERACTIVE BOUNDING BOX DRAWING
+  // ==============================================================================
+  // Compute normalized [0, 1] coordinates from mouse event on preview image
   const getRelativeCoords = (e) => {
     const rect = imgElementRef.current?.getBoundingClientRect() || imageContainerRef.current.getBoundingClientRect();
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -316,7 +346,7 @@ export default function App() {
     const width = currentBox.xmax - currentBox.xmin;
     const height = currentBox.ymax - currentBox.ymin;
 
-    // Only create box if user actually dragged a reasonable size (at least 2% in width & height)
+    // Filter out accidental clicks; only create box if dragged at least 2% in width & height
     if (width > 0.02 && height > 0.02) {
       addMissedItem([currentBox.ymin, currentBox.xmin, currentBox.ymax, currentBox.xmax]);
       setIsDrawingMode(false);
@@ -326,10 +356,12 @@ export default function App() {
     setCurrentBox(null);
   };
 
+  // Filter items visible to user based on current confidence slider threshold
   const visibleItems = rawDetections.filter(
     (it) => it.userEdited || (it.confidence ?? 1.0) >= confidenceThreshold
   );
 
+  // Batch confirm items and sync to backend SQLite database
   const confirmAndTrack = async () => {
     setStep(3);
     const newItems = visibleItems.map((it) => ({
