@@ -34,11 +34,17 @@ logger = logging.getLogger("fridge_tracker")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle startup and shutdown hooks."""
-    logger.info("Initializing SQLite database schema and seeding USDA FoodKeeper rules...")
+    logger.info("Checking SQLite database schema and USDA FoodKeeper rules...")
     init_db()
     with get_db() as conn:
-        seed_database(conn)
-    logger.info("Database initialization and FoodKeeper seeding complete.")
+        cursor = conn.execute("SELECT COUNT(*) FROM storage_rules;")
+        count = cursor.fetchone()[0]
+        if count == 0:
+            logger.info("Seeding USDA FoodKeeper rules into database...")
+            seed_database(conn)
+        else:
+            logger.info("FoodKeeper database already seeded (%d rules loaded). Skipping re-seed.", count)
+    logger.info("Database ready.")
     yield
     logger.info("Shutting down Fridge Tracker server.")
 

@@ -51,6 +51,13 @@ class FoodInferenceService:
             logger.info("Loading YOLO weights from %s onto %s...", self.weights_path, self.device)
             self.model = YOLO(str(self.weights_path))
             logger.info("YOLO model loaded successfully. Classes: %d", len(self.model.names))
+            # Quick warm-up inference pass to compile MPS/CUDA kernels ahead of first user request
+            try:
+                dummy_img = Image.new("RGB", (640, 640), color=(128, 128, 128))
+                self.model.predict(source=dummy_img, imgsz=640, device=self.device, verbose=False)
+                logger.info("YOLO model warm-up pass complete.")
+            except Exception as warmup_err:
+                logger.debug("Warm-up pass skipped: %s", warmup_err)
         except Exception as exc:
             logger.error("Failed to load YOLO model: %s", exc)
             self.model = None
@@ -96,12 +103,13 @@ class FoodInferenceService:
             logger.warning("YOLO model not loaded; returning empty detections.")
             return []
 
-        # Run inference through Ultralytics YOLO
+        # Run inference through Ultralytics YOLO with standardized imgsz=640
         # Passing PIL.Image converts internally to PyTorch tensor on self.device
         results = self.model.predict(
             source=image,
             conf=confidence_threshold,
             iou=iou_threshold,
+            imgsz=640,
             device=self.device,
             verbose=False,
         )

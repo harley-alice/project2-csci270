@@ -50,15 +50,45 @@ class FoodKeeperRuleEngine:
     """
     Deterministic rule engine that marries deep learning detections
     with official USDA FoodKeeper safety parameters.
+    Caches rules in memory for fast O(1) lookups during multi-object detection.
     """
 
     def __init__(self, conn: Optional[sqlite3.Connection] = None):
         self._conn = conn
+        self._rules_cache: Dict[tuple, Dict[str, Any]] = {}
+        self._load_cache()
 
     def _get_connection(self) -> sqlite3.Connection:
         if self._conn is not None:
             return self._conn
         return get_db_connection()
+
+    def _load_cache(self) -> None:
+        """Preload all storage rules into memory to eliminate per-detection database I/O."""
+        try:
+            conn = self._get_connection()
+            should_close = (self._conn is None)
+            cursor = conn.execute(
+                """
+                SELECT r.*, c.name as category_name, c.tier as safety_tier, c.priority
+                FROM storage_rules r
+                LEFT JOIN food_categories c ON r.category_id = c.id;
+                """
+            )
+            rows = cursor.fetchall()
+            for r in rows:
+                key = (
+                    r["food_class"],
+                    r["package_state"],
+                    r["storage_location"],
+                    bool(r["is_cooked"])
+                )
+                self._rules_cache[key] = dict(r)
+            if should_close:
+                conn.close()
+        except Exception:
+            # Table might not exist yet during initial scaffold; will query dynamically if empty
+            pass
 
     def normalize_food_class(self, food_class: str) -> str:
         """Sanitize and normalize food class name."""
@@ -75,17 +105,6 @@ class FoodKeeperRuleEngine:
     ) -> Dict[str, Any]:
         """
         Calculate dynamic expiration window and safety metrics for a given food item.
-
-        Args:
-            food_class: Detected class name (e.g., 'ground_beef', 'milk', 'jar').
-            package_state: 'sealed' (unopened) or 'opened'.
-            storage_location: 'refrigerator', 'freezer', or 'pantry'.
-            is_cooked: True if food has been cooked/prepared.
-            start_date: Starting anchor date (defaults to today).
-
-        Returns:
-            Dictionary containing calculated shelf life windows, exact expiration dates,
-            safety tier, and USDA guidance warnings.
         """
         if start_date is None:
             start_date = date.today()
@@ -99,28 +118,26 @@ class FoodKeeperRuleEngine:
         if norm_loc not in ("refrigerator", "freezer", "pantry"):
             norm_loc = "refrigerator"
 
-        conn = self._get_connection()
-        should_close = (self._conn is None)
+        # Check in-memory cache first for fast O(1) retrieval
+        rule = self._rules_cache.get((norm_class, norm_pkg, norm_loc, is_cooked))
 
-        try:
-            # Query specific rule
-            cursor = conn.execute(
-                """
-                SELECT r.*, c.name as category_name, c.tier as safety_tier, c.priority
-                FROM storage_rules r
-                LEFT JOIN food_categories c ON r.category_id = c.id
-                WHERE r.food_class = ?
-                  AND r.package_state = ?
-                  AND r.storage_location = ?
-                  AND r.is_cooked = ?
-                LIMIT 1;
-                """,
-                (norm_class, norm_pkg, norm_loc, 1 if is_cooked else 0),
-            )
-            rule = cursor.fetchone()
+        # Fallback 1: match without is_cooked
+        if not rule and is_cooked:
+            rule = self._rules_cache.get((norm_class, norm_pkg, norm_loc, False))
 
-            # Fallback 1: match without is_cooked constraint if not found
-            if not rule and is_cooked:
+        # Fallback 2: match refrigerator rule if requested location not found
+        if not rule and norm_loc != "refrigerator":
+            rule = self._rules_cache.get((norm_class, norm_pkg, "refrigerator", is_cooked))
+
+        # Fallback 3: match sealed rule if opened not explicitly found
+        if not rule and norm_pkg == "opened":
+            rule = self._rules_cache.get((norm_class, "sealed", norm_loc, is_cooked))
+
+        # If cache was empty or missed, fallback to direct DB lookup
+        if not rule:
+            conn = self._get_connection()
+            should_close = (self._conn is None)
+            try:
                 cursor = conn.execute(
                     """
                     SELECT r.*, c.name as category_name, c.tier as safety_tier, c.priority
@@ -129,97 +146,101 @@ class FoodKeeperRuleEngine:
                     WHERE r.food_class = ?
                       AND r.package_state = ?
                       AND r.storage_location = ?
-                    ORDER BY r.is_cooked DESC
                     LIMIT 1;
                     """,
                     (norm_class, norm_pkg, norm_loc),
                 )
-                rule = cursor.fetchone()
+                r = cursor.fetchone()
+                if r:
+                    rule = dict(r)
 
-            # Fallback 2: match refrigerator rule if requested location not found
-            if not rule and norm_loc != "refrigerator":
-                cursor = conn.execute(
-                    """
-                    SELECT r.*, c.name as category_name, c.tier as safety_tier, c.priority
-                    FROM storage_rules r
-                    LEFT JOIN food_categories c ON r.category_id = c.id
-                    WHERE r.food_class = ?
-                      AND r.package_state = ?
-                      AND r.storage_location = 'refrigerator'
-                    LIMIT 1;
-                    """,
-                    (norm_class, norm_pkg),
-                )
-                rule = cursor.fetchone()
+                if not rule and norm_loc != "refrigerator":
+                    cursor = conn.execute(
+                        """
+                        SELECT r.*, c.name as category_name, c.tier as safety_tier, c.priority
+                        FROM storage_rules r
+                        LEFT JOIN food_categories c ON r.category_id = c.id
+                        WHERE r.food_class = ?
+                          AND r.package_state = ?
+                          AND r.storage_location = 'refrigerator'
+                        LIMIT 1;
+                        """,
+                        (norm_class, norm_pkg),
+                    )
+                    r = cursor.fetchone()
+                    if r:
+                        rule = dict(r)
 
-            # Fallback 3: generic match on food_class alone
-            if not rule:
-                cursor = conn.execute(
-                    """
-                    SELECT r.*, c.name as category_name, c.tier as safety_tier, c.priority
-                    FROM storage_rules r
-                    LEFT JOIN food_categories c ON r.category_id = c.id
-                    WHERE r.food_class = ?
-                    LIMIT 1;
-                    """,
-                    (norm_class,),
-                )
-                rule = cursor.fetchone()
+                # Fallback: generic match on food_class alone
+                if not rule:
+                    cursor = conn.execute(
+                        """
+                        SELECT r.*, c.name as category_name, c.tier as safety_tier, c.priority
+                        FROM storage_rules r
+                        LEFT JOIN food_categories c ON r.category_id = c.id
+                        WHERE r.food_class = ?
+                        LIMIT 1;
+                        """,
+                        (norm_class,),
+                    )
+                    r = cursor.fetchone()
+                    if r:
+                        rule = dict(r)
+            finally:
+                if should_close:
+                    conn.close()
 
-            if rule:
-                days_min = int(rule["shelf_life_days_min"])
-                days_max = int(rule["shelf_life_days_max"])
-                days_rec = int(rule["recommended_shelf_life_days"])
-                safety_tier = rule["safety_tier"] or "tier_2"
-                category_name = rule["category_name"] or "General"
-                requires_detail = bool(rule["requires_user_detail"])
-                prompt = rule["detail_prompt"]
-                guidance = rule["usda_guidance"]
-            else:
-                # Conservative fallback for unknown item
-                days_min = CONSERVATIVE_FALLBACK["shelf_life_days_min"]
-                days_max = CONSERVATIVE_FALLBACK["shelf_life_days_max"]
-                days_rec = CONSERVATIVE_FALLBACK["recommended_shelf_life_days"]
-                safety_tier = CONSERVATIVE_FALLBACK["tier"]
-                category_name = CONSERVATIVE_FALLBACK["category"]
-                requires_detail = CONSERVATIVE_FALLBACK["requires_user_detail"]
-                prompt = CONSERVATIVE_FALLBACK["detail_prompt"]
-                guidance = CONSERVATIVE_FALLBACK["usda_guidance"]
+        if rule:
+            days_min = int(rule["shelf_life_days_min"])
+            days_max = int(rule["shelf_life_days_max"])
+            days_rec = int(rule["recommended_shelf_life_days"])
+            safety_tier = rule["safety_tier"] or "tier_2"
+            category_name = rule["category_name"] or "General"
+            requires_detail = bool(rule["requires_user_detail"])
+            prompt = rule["detail_prompt"]
+            guidance = rule["usda_guidance"]
+        else:
+            # Conservative fallback for unknown item
+            days_min = CONSERVATIVE_FALLBACK["shelf_life_days_min"]
+            days_max = CONSERVATIVE_FALLBACK["shelf_life_days_max"]
+            days_rec = CONSERVATIVE_FALLBACK["recommended_shelf_life_days"]
+            safety_tier = CONSERVATIVE_FALLBACK["tier"]
+            category_name = CONSERVATIVE_FALLBACK["category"]
+            requires_detail = CONSERVATIVE_FALLBACK["requires_user_detail"]
+            prompt = CONSERVATIVE_FALLBACK["detail_prompt"]
+            guidance = CONSERVATIVE_FALLBACK["usda_guidance"]
 
-            # Compute dates
-            earliest_exp = start_date + timedelta(days=days_min)
-            latest_exp = start_date + timedelta(days=days_max)
-            rec_exp = start_date + timedelta(days=days_rec)
+        # Compute dates
+        earliest_exp = start_date + timedelta(days=days_min)
+        latest_exp = start_date + timedelta(days=days_max)
+        rec_exp = start_date + timedelta(days=days_rec)
 
-            is_container = (norm_class == "jar")
-            is_high_risk = (safety_tier == "tier_1")
-            is_urgent = (days_rec <= 3)
+        is_container = (norm_class == "jar")
+        is_high_risk = (safety_tier == "tier_1")
+        is_urgent = (days_rec <= 3)
 
-            return {
-                "food_class": norm_class,
-                "display_name": norm_class.replace("_", " ").title(),
-                "package_state": norm_pkg,
-                "storage_location": norm_loc,
-                "is_cooked": is_cooked,
-                "start_date": start_date.isoformat(),
-                "shelf_life_days_min": days_min,
-                "shelf_life_days_max": days_max,
-                "recommended_shelf_life_days": days_rec,
-                "expiration_date": rec_exp.isoformat(),
-                "earliest_expiration_date": earliest_exp.isoformat(),
-                "latest_expiration_date": latest_exp.isoformat(),
-                "safety_tier": safety_tier,
-                "category_name": category_name,
-                "requires_user_detail": requires_detail or is_container,
-                "detail_prompt": prompt,
-                "usda_guidance": guidance,
-                "is_container": is_container,
-                "is_high_risk": is_high_risk,
-                "is_urgent": is_urgent,
-            }
-        finally:
-            if should_close:
-                conn.close()
+        return {
+            "food_class": norm_class,
+            "display_name": norm_class.replace("_", " ").title(),
+            "package_state": norm_pkg,
+            "storage_location": norm_loc,
+            "is_cooked": is_cooked,
+            "start_date": start_date.isoformat(),
+            "shelf_life_days_min": days_min,
+            "shelf_life_days_max": days_max,
+            "recommended_shelf_life_days": days_rec,
+            "expiration_date": rec_exp.isoformat(),
+            "earliest_expiration_date": earliest_exp.isoformat(),
+            "latest_expiration_date": latest_exp.isoformat(),
+            "safety_tier": safety_tier,
+            "category_name": category_name,
+            "requires_user_detail": requires_detail or is_container,
+            "detail_prompt": prompt,
+            "usda_guidance": guidance,
+            "is_container": is_container,
+            "is_high_risk": is_high_risk,
+            "is_urgent": is_urgent,
+        }
 
 
 # Module-level singleton
