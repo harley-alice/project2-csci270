@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import torch
-from PIL import Image
+from PIL import Image, ImageOps
 from ultralytics import YOLO
 
 from backend.rule_engine import rule_engine
@@ -29,6 +29,22 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONF = 0.25
 DEFAULT_IOU = 0.70
 DEFAULT_WEIGHTS_PATH = PROJECT_ROOT / "ml" / "export" / "food_detector_v8n_baseline.pt"
+
+
+def apply_exif_orientation(image: Image.Image) -> Image.Image:
+    """
+    Return the image rotated/flipped upright according to its EXIF orientation tag.
+
+    Phone photos store their rotation in EXIF metadata instead of in the pixels, so without this
+    they reach the model sideways. Missing or broken EXIF never raises: the unrotated image is
+    returned instead.
+    """
+    try:
+        upright = ImageOps.exif_transpose(image)
+        return upright if upright is not None else image
+    except Exception as exc:  # malformed/truncated EXIF, unsupported tag values, etc.
+        logger.warning("Could not apply EXIF orientation (%s); using the image as stored.", exc)
+        return image
 
 
 class ModelNotLoadedError(RuntimeError):
@@ -78,8 +94,9 @@ class FoodInferenceService:
 
     def process_raw_image(self, image_bytes: bytes) -> Image.Image:
         """
-        Validate and preprocess raw image bytes into an RGB PIL Image.
-        Raises ValueError if bytes do not represent a valid image.
+        Validate and preprocess raw image bytes into an upright RGB PIL Image.
+        The EXIF orientation is applied before the RGB conversion, so the returned image (and its
+        .size) is what the model sees. Raises ValueError if bytes do not represent a valid image.
         """
         if not image_bytes:
             raise ValueError("Uploaded image file is empty.")
@@ -88,7 +105,8 @@ class FoodInferenceService:
             image = Image.open(io.BytesIO(image_bytes))
             image.verify()  # verify integrity
             # Reopen because verify() closes the file pointer
-            image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            image = Image.open(io.BytesIO(image_bytes))
+            image = apply_exif_orientation(image).convert("RGB")
             return image
         except Exception as exc:
             raise ValueError(f"Invalid or corrupted image format: {exc}") from exc
@@ -115,7 +133,7 @@ class FoodInferenceService:
             raise ModelNotLoadedError(f"{msg} Unzip model_export.zip at the repo root.")
 
         image = self.process_raw_image(image_bytes)
-        img_w, img_h = image.size
+        img_w, img_h = image.size  # after EXIF rotation: same object that is passed to the model
 
         # Run inference through Ultralytics YOLO
         # Passing PIL.Image converts internally to PyTorch tensor on self.device
