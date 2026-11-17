@@ -537,19 +537,16 @@ export default function App() {
               role="status"
               aria-live="polite"
               style={{
-                background: '#f0f5ff',
-                border: '1px solid #adc6ff',
-                color: '#1d39c4',
+                background: '#f4f6fb',
+                border: '1px solid var(--color-primary-accent)',
+                color: 'var(--color-primary-accent)',
                 padding: '12px 16px',
                 marginBottom: '16px',
                 fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
+                fontWeight: 600
               }}
             >
-              <span aria-hidden="true">⚙️</span>
-              <span><strong>Running YOLO model...</strong> Detecting fridge food items in the image.</span>
+              Analyzing image and detecting items...
             </div>
           )}
 
@@ -871,15 +868,26 @@ export default function App() {
             </caption>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left', fontSize: '13px', color: 'var(--color-text)' }}>
-                <th scope="col" style={{ padding: '10px 0', width: '38%' }}>Food Item</th>
-                <th scope="col" style={{ padding: '10px 0', width: '24%' }}>Package State</th>
-                <th scope="col" style={{ padding: '10px 0', width: '26%' }}>Shelf Life Remaining</th>
-                <th scope="col" style={{ padding: '10px 0', textAlign: 'right', width: '12%' }}>Actions</th>
+                <th scope="col" style={{ padding: '10px 0', width: '30%' }}>Food Item</th>
+                <th scope="col" style={{ padding: '10px 0', width: '20%' }}>Package State</th>
+                <th scope="col" style={{ padding: '10px 0', width: '22%' }}>Shelf Life</th>
+                <th scope="col" style={{ padding: '10px 0', width: '18%' }}>Status</th>
+                <th scope="col" style={{ padding: '10px 0', textAlign: 'right', width: '10%' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {tracking.map((t) => {
-                const isUrgent = t.days <= 3;
+                const daysNum = parseInt(t.days, 10);
+                const isExpired = daysNum <= 0;
+                const isUrgent = daysNum > 0 && daysNum <= 3;
+                
+                // Color tokens meeting WCAG AAA / AA contrast ratios against #ffffff
+                const badgeStyle = isExpired
+                  ? { bg: '#fff1f0', color: '#9e2b00', border: '1px solid #ffccc7', text: 'Expired' }
+                  : isUrgent
+                  ? { bg: '#fffbe6', color: '#874d00', border: '1px solid #ffe58f', text: 'Use Soon' }
+                  : { bg: '#f6ffed', color: '#135200', border: '1px solid #b7eb8f', text: 'Fresh' };
+
                 return (
                   <tr key={t.id} style={{ borderBottom: '1px solid #e5e5e5' }}>
                     <td style={{ padding: '12px 0', textTransform: 'capitalize', fontWeight: 600 }}>
@@ -892,7 +900,7 @@ export default function App() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           max="365"
                           aria-label={`Days remaining for ${t.label}`}
                           value={t.days}
@@ -902,19 +910,31 @@ export default function App() {
                             padding: '6px 6px',
                             fontSize: '13px',
                             border: '1px solid var(--color-border)',
-                            color: isUrgent ? 'var(--color-attention)' : 'inherit',
-                            fontWeight: isUrgent ? 700 : 400,
+                            color: 'inherit',
+                            fontWeight: isUrgent || isExpired ? 700 : 400,
                             minHeight: '40px'
                           }}
                         />
-                        <span style={{
-                          color: isUrgent ? 'var(--color-attention)' : 'inherit',
-                          fontWeight: isUrgent ? 700 : 400
-                        }}>
-                          {t.days === 1 ? 'day' : 'days'}
-                          {isUrgent ? ' (use soon)' : ''}
+                        <span style={{ color: 'var(--color-text-muted)' }}>
+                          {daysNum === 1 ? 'day' : 'days'}
                         </span>
                       </div>
+                    </td>
+                    <td style={{ padding: '12px 0' }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '4px 10px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          backgroundColor: badgeStyle.bg,
+                          color: badgeStyle.color,
+                          border: badgeStyle.border,
+                          letterSpacing: '0.2px'
+                        }}
+                      >
+                        {badgeStyle.text}
+                      </span>
                     </td>
                     <td style={{ padding: '12px 0', textAlign: 'right' }}>
                       <button
@@ -939,6 +959,13 @@ export default function App() {
                   </tr>
                 );
               })}
+              {tracking.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '36px 0', color: 'var(--color-text-muted)', fontSize: '14px' }}>
+                    Your fridge inventory is currently empty. Click "+ Scan More Food" to scan or add items.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
 
@@ -957,7 +984,7 @@ export default function App() {
             }}
           >
             <div style={{ fontWeight: 700, color: 'var(--color-attention)', marginBottom: '4px' }}>
-              ⚠️ Food Safety & USDA FoodKeeper Advisory
+              Notice: Food Safety & USDA FoodKeeper Advisory
             </div>
             <p>
               Expiration windows and shelf-life recommendations are advisories calculated using guidelines from the 
