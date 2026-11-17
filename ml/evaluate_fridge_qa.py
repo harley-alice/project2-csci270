@@ -82,8 +82,8 @@ def main():
 
     labels = {p.stem: p for p in LABEL_DIR.glob("*.txt")}
 
-    if len(images) != 65:
-        raise ValueError(f"Expected 65 images, found {len(images)}")
+    if len(images) == 0:
+        raise ValueError("No QA images found")
 
     if set(labels) != {Path(name).stem for name in images}:
         raise ValueError("Image and annotation filenames do not match.")
@@ -136,9 +136,18 @@ def main():
         for name in class_names
     }
 
-    total = {"TP": 0, "FP": 0, "FN": 0}
-    image_results = []
-    detection_results = []
+    total = {"TP": 0, "FP": 0, "FN":     0}
+    image_results     = []
+    detection_results     = []
+    localization_results     = []
+
+    localization_total = {
+        "localized": 0,
+        "missed": 0,
+        "unmatched_predictions": 0,
+        "correct_class": 0,
+        "wrong_class": 0
+}
 
     # Match predictions to ground truth, independently per image.
     for image_name in sorted(images):
@@ -227,6 +236,67 @@ def main():
             "false_positives_on_negative_image": fp if not gt_objects else 0
         })
 
+    # Evaluate localization independently of predicted class.
+    for image_name in sorted(images):
+        gt_objects = ground_truth[image_name]
+        pred_objects = predictions[image_name]
+
+        candidates = []
+
+        for gt_index, gt in enumerate(gt_objects):
+            for pred_index, pred in enumerate(pred_objects):
+                iou = calculate_iou(gt["box"], pred["box"])
+
+                if iou >= IOU_THRESHOLD:
+                    candidates.append((iou, gt_index, pred_index))
+
+        candidates.sort(reverse=True)
+
+        matched_gt = set()
+        matched_pred = set()
+
+        for iou, gt_index, pred_index in candidates:
+            if gt_index in matched_gt or pred_index in matched_pred:
+                continue
+
+            matched_gt.add(gt_index)
+            matched_pred.add(pred_index)
+
+            gt_class = gt_objects[gt_index]["class"]
+            pred_class = pred_objects[pred_index]["class"]
+
+            correct_class = gt_class == pred_class
+
+            localization_total["localized"] += 1
+
+            if correct_class:
+                localization_total["correct_class"] += 1
+            else:
+                localization_total["wrong_class"] += 1
+
+            localization_results.append({
+                "image": image_name,
+                "ground_truth_class": gt_class,
+                "predicted_class": pred_class,
+                "classification": "correct" if correct_class else "incorrect",
+                "confidence": pred_objects[pred_index]["confidence"],
+                "IoU": round(iou, 4)
+            })
+
+        localization_total["missed"] += len(gt_objects) - len(matched_gt)
+        localization_total["unmatched_predictions"] += len(pred_objects) - len(matched_pred)
+
+    # Calculate localization metrics.
+    localization_recall = safe_divide(
+        localization_total["localized"],
+        localization_total["localized"] + localization_total["missed"]
+    )
+
+    classification_accuracy = safe_divide(
+        localization_total["correct_class"],
+        localization_total["localized"]
+    )
+
     # Overall metrics.
     precision = safe_divide(total["TP"], total["TP"] + total["FP"])
     recall = safe_divide(total["TP"], total["TP"] + total["FN"])
@@ -244,6 +314,16 @@ def main():
         {"metric": "F1", "value": round(f1, 4)},
         {"metric": "IoU threshold", "value": IOU_THRESHOLD},
     ]
+
+    print("\nCLASS-INDEPENDENT LOCALIZATION")
+    print("=" * 45)
+    print("Localized objects:", localization_total["localized"])
+    print("Missed objects:", localization_total["missed"])
+    print("Unmatched predictions:", localization_total["unmatched_predictions"])
+    print("Correctly classified localized objects:", localization_total["correct_class"])
+    print("Incorrectly classified localized objects:", localization_total["wrong_class"])
+    print("Localization recall:", round(localization_recall, 4))
+    print("Classification accuracy among localized objects:", round(classification_accuracy, 4))
 
     # Per-class metrics.
     class_results = []
@@ -281,6 +361,7 @@ def main():
     save_csv("per_class_metrics.csv", class_results)
     save_csv("per_image_metrics.csv", image_results)
     save_csv("detection_matches.csv", detection_results)
+    save_csv("localization_analysis.csv", localization_results)
 
     print("\nFRIDGE QA EVALUATION")
     print("=" * 45)
