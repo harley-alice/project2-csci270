@@ -90,3 +90,7 @@ Verify that both services operate together:
 2. Keep the frontend server running in the second terminal.
 3. Open `http://localhost:3000/` in your web browser.
 4. Upload a refrigerator photo to detect food items, calculate expiration dates, and view inventory.
+
+## Before committing a training run
+
+Run `python ml/sanitize_paths.py` first so run configs (`ml/runs/*/args.yaml`) contain repo-relative paths, not your local absolute paths.
