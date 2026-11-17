@@ -1,11 +1,5 @@
 """
-Hybrid AI Rule Engine.
-
-Deterministic decision engine that takes the AI's detected food class
-(e.g., 'ground_beef', 'beef', 'chicken', 'milk', 'jar'), queries the
-FoodKeeper rules, and calculates dynamic expiration windows based on
-package state (opened vs. sealed) and storage conditions (refrigerator,
-freezer, pantry).
+Rule engine for food storage duration calculations.
 """
 
 from __future__ import annotations
@@ -16,7 +10,7 @@ from typing import Any, Dict, Optional
 
 from backend.database import get_db_connection
 
-# Normalization map for common synonyms or model variants
+# Name map for food class variants
 CLASS_ALIASES = {
     "ground beef": "ground_beef",
     "chicken_breast": "chicken",
@@ -29,7 +23,7 @@ CLASS_ALIASES = {
     "soda_can": "jar",
 }
 
-# Conservative default when a food class is unknown
+# Standard default values when a food class is not found
 CONSERVATIVE_FALLBACK = {
     "food_class": "unknown",
     "package_state": "opened",
@@ -48,9 +42,8 @@ CONSERVATIVE_FALLBACK = {
 
 class FoodKeeperRuleEngine:
     """
-    Deterministic rule engine that marries deep learning detections
-    with official USDA FoodKeeper safety parameters.
-    Caches rules in memory for fast O(1) lookups during multi-object detection.
+    Storage duration calculator using food safety rules.
+    Stores rules in memory for fast retrieval.
     """
 
     def __init__(self, conn: Optional[sqlite3.Connection] = None):
@@ -64,7 +57,7 @@ class FoodKeeperRuleEngine:
         return get_db_connection()
 
     def _load_cache(self) -> None:
-        """Preload all storage rules into memory to eliminate per-detection database I/O."""
+        """Load storage rules into memory from the database."""
         try:
             conn = self._get_connection()
             should_close = (self._conn is None)
@@ -87,11 +80,11 @@ class FoodKeeperRuleEngine:
             if should_close:
                 conn.close()
         except Exception:
-            # Table might not exist yet during initial scaffold; will query dynamically if empty
+            # Table is loaded on initial setup
             pass
 
     def normalize_food_class(self, food_class: str) -> str:
-        """Sanitize and normalize food class name."""
+        """Clean and normalize the food class name."""
         cleaned = food_class.strip().lower().replace("-", "_")
         return CLASS_ALIASES.get(cleaned, cleaned)
 
@@ -104,7 +97,7 @@ class FoodKeeperRuleEngine:
         start_date: Optional[date] = None,
     ) -> Dict[str, Any]:
         """
-        Calculate dynamic expiration window and safety metrics for a given food item.
+        Calculate expiration dates and safety parameters for a food item.
         """
         if start_date is None:
             start_date = date.today()
@@ -118,22 +111,22 @@ class FoodKeeperRuleEngine:
         if norm_loc not in ("refrigerator", "freezer", "pantry"):
             norm_loc = "refrigerator"
 
-        # Check in-memory cache first for fast O(1) retrieval
+        # Search in-memory cache first
         rule = self._rules_cache.get((norm_class, norm_pkg, norm_loc, is_cooked))
 
-        # Fallback 1: match without is_cooked
+        # Fallback 1: match without cook status
         if not rule and is_cooked:
             rule = self._rules_cache.get((norm_class, norm_pkg, norm_loc, False))
 
-        # Fallback 2: match refrigerator rule if requested location not found
+        # Fallback 2: match refrigerator rule if the selected location is missing
         if not rule and norm_loc != "refrigerator":
             rule = self._rules_cache.get((norm_class, norm_pkg, "refrigerator", is_cooked))
 
-        # Fallback 3: match sealed rule if opened not explicitly found
+        # Fallback 3: match sealed rule if opened rule is missing
         if not rule and norm_pkg == "opened":
             rule = self._rules_cache.get((norm_class, "sealed", norm_loc, is_cooked))
 
-        # If cache was empty or missed, fallback to direct DB lookup
+        # Fallback 4: query the database directly
         if not rule:
             conn = self._get_connection()
             should_close = (self._conn is None)
@@ -171,7 +164,7 @@ class FoodKeeperRuleEngine:
                     if r:
                         rule = dict(r)
 
-                # Fallback: generic match on food_class alone
+                # Fallback: match by food class name only
                 if not rule:
                     cursor = conn.execute(
                         """
@@ -200,7 +193,7 @@ class FoodKeeperRuleEngine:
             prompt = rule["detail_prompt"]
             guidance = rule["usda_guidance"]
         else:
-            # Conservative fallback for unknown item
+            # Use default values for unknown item
             days_min = CONSERVATIVE_FALLBACK["shelf_life_days_min"]
             days_max = CONSERVATIVE_FALLBACK["shelf_life_days_max"]
             days_rec = CONSERVATIVE_FALLBACK["recommended_shelf_life_days"]
@@ -210,7 +203,7 @@ class FoodKeeperRuleEngine:
             prompt = CONSERVATIVE_FALLBACK["detail_prompt"]
             guidance = CONSERVATIVE_FALLBACK["usda_guidance"]
 
-        # Compute dates
+        # Calculate expiration dates
         earliest_exp = start_date + timedelta(days=days_min)
         latest_exp = start_date + timedelta(days=days_max)
         rec_exp = start_date + timedelta(days=days_rec)
@@ -243,6 +236,6 @@ class FoodKeeperRuleEngine:
         }
 
 
-# Module-level singleton
+# Singleton instance
 rule_engine = FoodKeeperRuleEngine()
 

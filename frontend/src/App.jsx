@@ -4,62 +4,56 @@ import { FOOD_CLASSES, INITIAL_DETECTIONS } from './mockData';
 import { estimateShelfLife, sendFeedback, detectFridgeItems, getInventory, saveInventory } from './services/api';
 import BoundingBoxOverlay from './components/BoundingBoxOverlay';
 
-// Sample stock fridge image for initial placeholder testing
+// Default test image
 const SAMPLE_IMAGE = 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=1200&q=80';
 
 /**
- * CSCI 270 - Project 2: Food Expiration Predictor
- * Frontend Lead: Alice Harley
- * 
- * 4-Step Interactive AI & Expiration Workflow:
- *   1. Scan / Capture Photo (Camera stream or local file upload)
- *   2. Review & Human-in-the-Loop Verification (YOLO bounding boxes + USDA shelf life)
- *   3. Processing / Batch sync with SQLite database
- *   4. Active Digital Fridge Dashboard (Tracking countdown & food safety advisories)
+ * Main application component.
+ * Steps:
+ * 1. Capture or upload photo.
+ * 2. Review detected items and expiration dates.
+ * 3. Save items to database.
+ * 4. Show tracked inventory items.
  */
 export default function App() {
-  // ==============================================================================
-  // 1. STATE MANAGEMENT
-  // ==============================================================================
-  // Steps: 1 = Capture, 2 = Review, 3 = Processing, 4 = Inventory
+  // 1. State variables
+  // Screen steps: 1 = Capture, 2 = Review, 3 = Save, 4 = Inventory
   const [step, setStep] = useState(1);
   const [image, setImage] = useState(SAMPLE_IMAGE);
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState(null);
   const [rawDetections, setRawDetections] = useState([]);
-  // Initial detection threshold slider (default 0.20 to catch edge cases)
+  // Minimum certainty threshold (default 0.20)
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.20);
   const [tracking, setTracking] = useState([
     { id: 't1', label: 'yogurt', packageState: 'sealed', days: 14 },
     { id: 't2', label: 'egg', packageState: 'sealed', days: 21 }
   ]);
 
-  // Helper to format class labels for friendly frontend display (e.g. 'bell_pepper' -> 'bell pepper')
+  // Convert label names with underscores to space-separated text
   const formatLabel = (label) => (label ? label.replace(/_/g, ' ') : '');
 
-  // Live Camera state
+  // Camera state
   const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
-  // Drawing bounding box state for Human-in-the-loop Active Learning
+  // Manual box drawing state
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawingStart, setDrawingStart] = useState(null);
   const [currentBox, setCurrentBox] = useState(null);
   const imageContainerRef = useRef(null);
   const imgElementRef = useRef(null);
 
-  // ==============================================================================
-  // 2. CAMERA & IMAGE INGESTION
-  // ==============================================================================
-  // Stop camera stream when component unmounts
+  // 2. Camera and image loading
+  // Stop the camera when removing this component
   useEffect(() => {
     return () => {
       stopCamera();
     };
   }, []);
 
-  // Fetch persisted inventory from SQLite backend on initial page load
+  // Load inventory from database on page start
   useEffect(() => {
     async function loadInitialInventory() {
       try {
@@ -81,7 +75,7 @@ export default function App() {
     loadInitialInventory();
   }, []);
 
-  // Initialize live webcam / phone camera stream
+  // Start the video stream from the camera
   const startCamera = async () => {
     try {
       setIsCameraActive(true);
@@ -99,7 +93,7 @@ export default function App() {
     }
   };
 
-  // Turn off camera tracks to free hardware resources
+  // Stop the camera video stream
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -108,7 +102,7 @@ export default function App() {
     setIsCameraActive(false);
   };
 
-  // Capture current video frame to canvas and trigger YOLO inference
+  // Capture image frame from the video stream and run detection
   const capturePhoto = () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
@@ -125,7 +119,7 @@ export default function App() {
     setIsDetecting(true);
     setStep(2);
 
-    // Run real YOLO detection on captured image
+    // Send the captured image to the detection service
     canvas.toBlob(async (blob) => {
       try {
         const results = await detectFridgeItems(blob);
@@ -145,7 +139,7 @@ export default function App() {
     }, 'image/jpeg');
   };
 
-  // Handle local image file upload (converts iOS HEIC/HEIF to JPEG in browser)
+  // Read local image file and convert HEIC files to JPEG if needed
   const handleFile = async (e) => {
     let file = e.target.files[0];
     if (file) {
@@ -156,7 +150,7 @@ export default function App() {
       setStep(2);
 
       try {
-        // iOS camera photos typically save as HEIC; convert client-side before sending to PyTorch
+        // Convert HEIC file format to JPEG for browser display
         const lowerName = file.name.toLowerCase();
         const isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
           lowerName.endsWith('.heic') || lowerName.endsWith('.heif');
@@ -177,7 +171,7 @@ export default function App() {
 
         setImage(URL.createObjectURL(file));
 
-        // Send photo to FastAPI /detect endpoint
+        // Send image to the detection endpoint
         const results = await detectFridgeItems(file);
         setRawDetections(
           results.map((it) => ({
@@ -195,10 +189,8 @@ export default function App() {
     }
   };
 
-  // ==============================================================================
-  // 3. HUMAN-IN-THE-LOOP FEEDBACK & ACTIVE LEARNING
-  // ==============================================================================
-  // Re-label an existing item (user correction feedback hook for future retraining)
+  // 3. User verification and feedback handlers
+  // Change the food class of an item and record the change
   const updateLabel = (id, newLabel) => {
     const targetItem = rawDetections.find((it) => it.id === id);
     if (!targetItem || targetItem.label === newLabel) return;
@@ -228,7 +220,7 @@ export default function App() {
     );
   };
 
-  // Toggle opened vs sealed package state (updates USDA shelf life formula)
+  // Change package state between sealed and opened
   const togglePackageState = (id, newState) => {
     setRawDetections((prev) =>
       prev.map((it) =>
@@ -243,7 +235,7 @@ export default function App() {
     );
   };
 
-  // Custom edit shelf life days directly in review
+  // Update shelf life days for an item in review
   const updateDays = (id, newDays) => {
     const parsed = Math.max(1, parseInt(newDays, 10) || 1);
     setRawDetections((prev) =>
@@ -251,7 +243,7 @@ export default function App() {
     );
   };
 
-  // Edit shelf life days directly in inventory tracking
+  // Update shelf life days for an item in inventory
   const updateTrackingDays = (id, newDays) => {
     const parsed = Math.max(1, parseInt(newDays, 10) || 1);
     setTracking((prev) =>
@@ -259,7 +251,7 @@ export default function App() {
     );
   };
 
-  // Reject a false positive detection (logs feedback event to suppress similar errors)
+  // Delete an incorrect item and record the change
   const removeItem = (id) => {
     const targetItem = rawDetections.find((it) => it.id === id);
     if (targetItem) {
@@ -278,7 +270,7 @@ export default function App() {
     setRawDetections((prev) => prev.filter((it) => it.id !== id));
   };
 
-  // Add missed item (false negative / active learning hook for missed detections)
+  // Add an item that the detector missed
   const addMissedItem = (customBbox = null) => {
     const defaultLabel = 'apple';
     const newItem = {
@@ -287,7 +279,7 @@ export default function App() {
       confidence: 1.0,
       packageState: 'sealed',
       days: estimateShelfLife(defaultLabel, false),
-      bbox: customBbox, // null if added manually without drawing
+      bbox: customBbox, // Set to null if the user adds the item without a box
       userEdited: true,
       manuallyAdded: true
     };
@@ -306,10 +298,8 @@ export default function App() {
     setRawDetections((prev) => [...prev, newItem]);
   };
 
-  // ==============================================================================
-  // 4. INTERACTIVE BOUNDING BOX DRAWING
-  // ==============================================================================
-  // Compute normalized [0, 1] coordinates from mouse event on preview image
+  // 4. Interactive box drawing
+  // Calculate relative image coordinates from mouse position
   const getRelativeCoords = (e) => {
     const rect = imgElementRef.current?.getBoundingClientRect() || imageContainerRef.current.getBoundingClientRect();
     const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
@@ -346,7 +336,7 @@ export default function App() {
     const width = currentBox.xmax - currentBox.xmin;
     const height = currentBox.ymax - currentBox.ymin;
 
-    // Filter out accidental clicks; only create box if dragged at least 2% in width & height
+    // Ignore clicks with less than 2 percent size
     if (width > 0.02 && height > 0.02) {
       addMissedItem([currentBox.ymin, currentBox.xmin, currentBox.ymax, currentBox.xmax]);
       setIsDrawingMode(false);
@@ -356,12 +346,12 @@ export default function App() {
     setCurrentBox(null);
   };
 
-  // Filter items visible to user based on current confidence slider threshold
+  // Filter items by confidence threshold or manual edit status
   const visibleItems = rawDetections.filter(
     (it) => it.userEdited || (it.confidence ?? 1.0) >= confidenceThreshold
   );
 
-  // Batch confirm items and sync to backend SQLite database
+  // Save confirmed items to the inventory database
   const confirmAndTrack = async () => {
     setStep(3);
     const newItems = visibleItems.map((it) => ({
@@ -881,7 +871,7 @@ export default function App() {
                 const isExpired = daysNum <= 0;
                 const isUrgent = daysNum > 0 && daysNum <= 3;
                 
-                // Color tokens meeting WCAG AAA / AA contrast ratios against #ffffff
+                // Color styles with high visual contrast
                 const badgeStyle = isExpired
                   ? { bg: '#fff1f0', color: '#9e2b00', border: '1px solid #ffccc7', text: 'Expired' }
                   : isUrgent

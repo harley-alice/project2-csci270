@@ -1,5 +1,5 @@
 """
-Model feedback and telemetry endpoints for AI audit & retraining.
+Endpoints for user feedback and correction records.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ logger = logging.getLogger("fridge_tracker.routes.feedback")
     "",
     response_model=ModelFeedbackResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Record model correction or false positive feedback",
+    summary="Record user correction or rejected item",
 )
 def record_feedback(feedback: ModelFeedbackCreate):
     bbox_str = json.dumps(feedback.bbox) if feedback.bbox is not None else None
@@ -66,7 +66,7 @@ def record_feedback(feedback: ModelFeedbackCreate):
 
 @router.get(
     "",
-    summary="List feedback telemetry records",
+    summary="List feedback entries",
 )
 def list_feedback(limit: int = 100):
     with get_db() as conn:
@@ -80,4 +80,5 @@ def list_feedback(limit: int = 100):
         )
         rows = cursor.fetchall()
         return [dict(r) for r in rows]
+
 

@@ -1,9 +1,5 @@
 """
-USDA FoodKeeper and Food Safety Hierarchy Seed Data.
-
-Populates categories and deterministic storage rules covering all model classes
-with dynamic shelf life durations partitioned by package state (sealed vs. opened)
-and storage conditions (refrigerator vs. pantry vs. freezer).
+Food categories and storage duration rules data.
 """
 
 from __future__ import annotations
@@ -49,17 +45,17 @@ CATEGORIES = [
     }
 ]
 
-# Mapping each food class to its primary category name and USDA parameters
-# Each entry defines:
-#   sealed_fridge: (min, max, rec)
-#   opened_fridge: (min, max, rec)
-#   freezer_days: rec
-#   pantry_days: rec (or None if requires fridge)
-#   requires_user_detail: bool
-#   detail_prompt: str
-#   usda_guidance: str
+# Table of storage rules by food class
+# Structure:
+# - sealed_fridge: (min, max, recommended)
+# - opened_fridge: (min, max, recommended)
+# - freezer_days: recommended
+# - pantry_days: recommended (or None if refrigerator is required)
+# - requires_user_detail: boolean
+# - detail_prompt: text
+# - usda_guidance: text
 RULES_CATALOG = [
-    # Tier 1: High safety priority meats & seafood
+    # Tier 1: High priority meat and seafood items
     {
         "food_class": "ground_beef",
         "category": "Meat & Poultry",
@@ -113,7 +109,7 @@ RULES_CATALOG = [
         "pantry": None
     },
 
-    # Tier 2: Refrigeration-sensitive dairy and cured meats
+    # Tier 2: Dairy and cured meats
     {
         "food_class": "milk",
         "category": "Dairy & Refrigerated Perishables",
@@ -232,7 +228,7 @@ RULES_CATALOG = [
         "pantry": None
     },
 
-    # Tier 3: Produce and Lower Risk Foods
+    # Tier 3: Produce and vegetables
     {
         "food_class": "apple",
         "category": "Produce & Fresh Fruits/Vegetables",
@@ -507,7 +503,7 @@ RULES_CATALOG = [
         "pantry": 7
     },
 
-    # Tier 3: Bakery & Pantry Staples
+    # Tier 3: Bakery and shelf-stable goods
     {
         "food_class": "bread",
         "category": "Bakery & Shelf-Stable Goods",
@@ -561,7 +557,7 @@ RULES_CATALOG = [
         "pantry": 730
     },
 
-    # Special / Unidentified Container
+    # Containers and general jars
     {
         "food_class": "jar",
         "category": "Unidentified Containers",
@@ -579,7 +575,7 @@ RULES_CATALOG = [
 
 
 def seed_database(conn: sqlite3.Connection) -> None:
-    """Populate categories and storage rules if not already present."""
+    """Insert categories and storage rules into the database."""
     with conn:
         # 1. Insert categories
         cat_map = {}
@@ -606,8 +602,8 @@ def seed_database(conn: sqlite3.Connection) -> None:
             prompt = item["detail_prompt"]
             guidance = item["guidance"]
 
-            # Rules for Refrigerator:
-            # - Raw Sealed
+            # Refrigerator rules:
+            # - Raw sealed
             s_min, s_max, s_rec = item["sealed"]
             conn.execute(
                 """
@@ -627,7 +623,7 @@ def seed_database(conn: sqlite3.Connection) -> None:
                 (food_class, cat_id, s_min, s_max, s_rec, detail, prompt, guidance)
             )
 
-            # - Raw Opened
+            # - Raw opened
             o_min, o_max, o_rec = item["opened"]
             conn.execute(
                 """
@@ -647,7 +643,7 @@ def seed_database(conn: sqlite3.Connection) -> None:
                 (food_class, cat_id, o_min, o_max, o_rec, detail, prompt, guidance)
             )
 
-            # - Cooked Sealed
+            # - Cooked sealed
             cs_min, cs_max, cs_rec = item["cooked_sealed"]
             conn.execute(
                 """
@@ -667,7 +663,7 @@ def seed_database(conn: sqlite3.Connection) -> None:
                 (food_class, cat_id, cs_min, cs_max, cs_rec, detail, prompt, guidance)
             )
 
-            # - Cooked Opened
+            # - Cooked opened
             co_min, co_max, co_rec = item["cooked_opened"]
             conn.execute(
                 """
@@ -687,7 +683,7 @@ def seed_database(conn: sqlite3.Connection) -> None:
                 (food_class, cat_id, co_min, co_max, co_rec, detail, prompt, guidance)
             )
 
-            # - Freezer Rule (both sealed and opened)
+            # - Freezer rules for sealed and opened items
             freezer_days = item.get("freezer", 180)
             if freezer_days:
                 for pkg in ('sealed', 'opened'):
@@ -706,7 +702,7 @@ def seed_database(conn: sqlite3.Connection) -> None:
                         (food_class, cat_id, pkg, int(freezer_days * 0.75), freezer_days, freezer_days, detail, prompt, guidance)
                     )
 
-            # - Pantry Rule if applicable
+            # - Pantry rules for items stored at room temperature
             pantry_days = item.get("pantry")
             if pantry_days:
                 for pkg in ('sealed', 'opened'):

@@ -1,4 +1,4 @@
-"""Fridge Tracker backend package."""
+"""Backend package for the Fridge Tracker application."""
 
 import sys
 from pathlib import Path

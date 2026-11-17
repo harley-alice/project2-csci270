@@ -1,5 +1,5 @@
 """
-Main FastAPI Application Entrypoint for Fridge Tracker.
+Main server file for the Fridge Tracker application.
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-# Ensure the repository root is in sys.path regardless of how main.py is invoked
+# Add project root path to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -33,7 +33,7 @@ logger = logging.getLogger("fridge_tracker")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifecycle startup and shutdown hooks."""
+    """Start and stop tasks for the server process."""
     logger.info("Checking SQLite database schema and USDA FoodKeeper rules...")
     init_db()
     with get_db() as conn:
@@ -50,16 +50,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Fridge Tracker AI & FoodKeeper API",
-    description=(
-        "Hybrid AI inference server and deterministic FoodKeeper decision engine "
-        "for automated fridge inventory tracking and foodborne illness risk mitigation."
-    ),
+    title="Fridge Tracker API",
+    description="Backend service for food storage duration calculation and inventory management.",
     version="1.0.0",
     lifespan=lifespan,
 )
 
-# CORS middleware for local Vite frontend dev server
+# Allow local web client connections
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -68,7 +65,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register routers
+# Register route modules
 app.include_router(detect_router)
 app.include_router(inventory_router)
 app.include_router(rules_router)
@@ -77,7 +74,7 @@ app.include_router(feedback_router)
 
 @app.get("/", tags=["Root"])
 def root():
-    """Root entrypoint linking to documentation and core endpoints."""
+    """Return status and links to main service endpoints."""
     return {
         "message": "Fridge Tracker API is running",
         "docs": "/docs",
@@ -103,7 +100,7 @@ def api_root():
 
 @app.get("/api/health", tags=["Health"])
 def health_check():
-    """Health check endpoint."""
+    """Return health condition of the service."""
     return {
         "status": "healthy",
         "service": "fridge_tracker_api",

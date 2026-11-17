@@ -1,5 +1,5 @@
 """
-Food categories and FoodKeeper storage rules endpoints.
+Endpoints for categories and storage duration rules.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api", tags=["Rules & Categories"])
 @router.get(
     "/categories",
     response_model=List[CategoryResponse],
-    summary="List all food safety categories and tiers",
+    summary="List all food categories and safety tiers",
 )
 def list_categories():
     with get_db() as conn:
@@ -46,11 +46,11 @@ def list_categories():
 @router.get(
     "/rules",
     response_model=List[StorageRuleResponse],
-    summary="List FoodKeeper storage rules",
+    summary="List food storage duration rules",
 )
 def list_rules(
     food_class: Optional[str] = Query(None, description="Filter by food class"),
-    package_state: Optional[str] = Query(None, description="Filter by package state ('sealed' or 'opened')"),
+    package_state: Optional[str] = Query(None, description="Filter by package condition ('sealed' or 'opened')"),
     storage_location: Optional[str] = Query(None, description="Filter by storage location"),
 ):
     with get_db() as conn:
@@ -99,7 +99,7 @@ def list_rules(
 @router.post(
     "/rules/calculate",
     response_model=RuleCalculationResponse,
-    summary="Calculate dynamic expiration window via Hybrid AI Rule Engine",
+    summary="Calculate storage durations using food safety rules",
 )
 def calculate_rule(req: RuleCalculationRequest):
     result = rule_engine.calculate_expiration(
@@ -110,4 +110,5 @@ def calculate_rule(req: RuleCalculationRequest):
         start_date=req.start_date,
     )
     return RuleCalculationResponse(**result)
+
 

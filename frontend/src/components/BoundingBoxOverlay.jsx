@@ -1,16 +1,9 @@
 import React from 'react';
 
 /**
- * CSCI 270 - Project 2: Food Expiration Predictor
- * Frontend Lead: Alice Harley
- * 
- * BoundingBoxOverlay Component
- * ==============================================================================
- * Renders the fridge photo with an SVG overlay displaying YOLO bounding boxes,
- * class labels, confidence percentages, and visual certainty indicators.
- * Also supports interactive click-and-drag drawing for human-in-the-loop
- * active learning (capturing false negatives to feed back into model training).
- * ==============================================================================
+ * Show the image with bounding boxes for identified food items.
+ * Shows item names, certainty percentages, and boundary outlines.
+ * Lets the user draw boundary boxes to add items.
  */
 export default function BoundingBoxOverlay({
   image,
@@ -26,7 +19,7 @@ export default function BoundingBoxOverlay({
 }) {
   return (
     <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-      {/* 1. Main image container with relative positioning for SVG coordinate alignment */}
+      {/* Container for the image and svg overlay */}
       <div
         ref={imageContainerRef}
         onMouseDown={handleMouseDown}
@@ -44,7 +37,7 @@ export default function BoundingBoxOverlay({
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
         }}
       >
-        {/* Underneath image preview */}
+        {/* Preview image */}
         <img
           ref={imgElementRef}
           src={image}
@@ -60,7 +53,7 @@ export default function BoundingBoxOverlay({
           }}
         />
 
-        {/* 2. Scaled SVG overlay using normalized 0-1000 coordinate space */}
+        {/* SVG layer for boxes and text labels */}
         <svg
           style={{
             position: 'absolute',
@@ -76,25 +69,25 @@ export default function BoundingBoxOverlay({
           aria-hidden="true"
         >
           {visibleItems.map((it) => {
-            // Skip items added manually without bounding box coordinates
+            // Ignore items without bounding box coordinates
             if (!it.bbox || !Array.isArray(it.bbox) || it.bbox.length < 4) return null;
             
-            // YOLO normalized coordinates: [ymin, xmin, ymax, xmax] in [0, 1] range
+            // Normalized coordinates: [ymin, xmin, ymax, xmax] from 0.0 to 1.0
             const [ymin, xmin, ymax, xmax] = it.bbox;
             const conf = it.confidence ?? 1.0;
             const isUnsure = conf < 0.60;
 
-            // Visual signifiers for user trust:
-            // - Gold/Amber: User-edited or manually annotated items
-            // - Orange/Red: Low confidence (< 60%) needing human verification
-            // - Blue: High confidence detections
+            // Box colors:
+            // - Yellow: User-edited or added items
+            // - Red: Low certainty (< 60 percent) requiring verification
+            // - Blue: High certainty items
             const strokeColor = it.userEdited
               ? 'var(--color-accent, #faad14)'
               : isUnsure
               ? 'var(--color-attention, #d4380d)'
               : 'var(--color-primary-accent, #1890ff)';
 
-            // Scale normalized [0, 1] coordinates into the 1000x1000 viewBox
+            // Scale coordinates into the 1000 by 1000 svg area
             const x = xmin * 1000;
             const y = ymin * 1000;
             const w = Math.max(4, (xmax - xmin) * 1000);
@@ -104,7 +97,7 @@ export default function BoundingBoxOverlay({
 
             return (
               <g key={it.id}>
-                {/* Detection bounding box with subtle translucent fill */}
+                {/* Bounding box rectangle */}
                 <rect
                   x={x}
                   y={y}
@@ -114,7 +107,7 @@ export default function BoundingBoxOverlay({
                   stroke={strokeColor}
                   strokeWidth="3"
                 />
-                {/* Badge header for readable class name and confidence score */}
+                {/* Label badge background */}
                 <rect
                   x={x}
                   y={Math.max(0, y - 22)}
@@ -122,7 +115,7 @@ export default function BoundingBoxOverlay({
                   height="22"
                   fill={strokeColor}
                 />
-                {/* Text tag */}
+                {/* Label text */}
                 <text
                   x={x + 6}
                   y={Math.max(16, y - 6)}
@@ -137,7 +130,7 @@ export default function BoundingBoxOverlay({
             );
           })}
 
-          {/* 3. In-progress dashed preview box while user clicks and drags */}
+          {/* Temporary box drawn by user */}
           {isDrawingMode && currentBox && (
             <rect
               x={currentBox.xmin * 1000}

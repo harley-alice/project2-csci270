@@ -1,5 +1,5 @@
 """
-SQLite database connection and schema initialization for Fridge Tracker.
+Database connection and schema setup for the Fridge Tracker application.
 """
 
 from __future__ import annotations
@@ -13,12 +13,12 @@ from typing import Generator
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DB_PATH = PROJECT_ROOT / "data" / "fridge_tracker.sqlite"
 
-# Allow environment override for testing or deployment
+# Read database path from environment variable if present
 DB_PATH = Path(os.environ.get("FRIDGE_DB_PATH", DEFAULT_DB_PATH))
 
 
 def get_db_connection() -> sqlite3.Connection:
-    """Create a SQLite database connection with row factory and foreign keys enabled."""
+    """Open a SQLite database connection with row access and foreign key checks enabled."""
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
     conn.row_factory = sqlite3.Row
@@ -28,7 +28,7 @@ def get_db_connection() -> sqlite3.Connection:
 
 @contextmanager
 def get_db() -> Generator[sqlite3.Connection, None, None]:
-    """Context manager for acquiring and safely closing a DB connection."""
+    """Provide a database connection context that commits changes and closes safely."""
     conn = get_db_connection()
     try:
         yield conn
@@ -42,13 +42,11 @@ def get_db() -> Generator[sqlite3.Connection, None, None]:
 
 def init_db(conn: sqlite3.Connection | None = None) -> None:
     """
-    Initialize SQLite schema:
-      - food_categories: Safety priority tiers and broad categories.
-      - storage_rules: USDA FoodKeeper dynamic shelf life rules by food class,
-        package state (opened/sealed), and storage location.
-      - inventory_items: Tracked fridge inventory items, verification status,
-        and dynamic expiration dates.
-      - model_feedback: User corrections and feedback for model audit/retraining.
+    Create the database tables if they do not exist:
+    - food_categories: Safety tiers and categories.
+    - storage_rules: Storage duration rules by food item, package condition, and location.
+    - inventory_items: Stored food items and calculated expiration dates.
+    - model_feedback: User correction entries and review records.
     """
     should_close = False
     if conn is None:
@@ -127,7 +125,7 @@ def init_db(conn: sqlite3.Connection | None = None) -> None:
             );
             """)
 
-            # Indices for rapid querying
+            # Fast search index creation
             conn.execute("CREATE INDEX IF NOT EXISTS idx_storage_rules_lookup ON storage_rules (food_class, package_state, storage_location);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_inventory_food_class ON inventory_items (food_class);")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_inventory_expiration ON inventory_items (expiration_date);")

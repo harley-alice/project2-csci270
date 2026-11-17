@@ -1,5 +1,5 @@
 """
-Inference API endpoints for fridge food detection.
+Endpoints for food detection in images.
 """
 
 from __future__ import annotations
@@ -19,19 +19,19 @@ logger = logging.getLogger("fridge_tracker.routes.detect")
 @router.post(
     "/detect",
     response_model=DetectResponse,
-    summary="Detect food items in an uploaded fridge photograph",
-    description="Loads raw image file, generates tensor, executes YOLO inference, and applies FoodKeeper expiration calculations."
+    summary="Detect food items in an uploaded image file",
+    description="Loads the image file, identifies objects, and returns bounding boxes with storage durations."
 )
 async def detect_food(
-    file: UploadFile = File(..., description="Raw fridge photograph (JPEG, PNG, WebP)"),
+    file: UploadFile = File(..., description="Food image file in JPEG, PNG, or WebP format"),
     confidence_threshold: float = Query(
-        0.25, ge=0.05, le=0.99, description="Confidence threshold for bounding boxes"
+        0.25, ge=0.05, le=0.99, description="Minimum certainty threshold for detections"
     ),
     package_state: str = Query(
-        "sealed", description="Package state assumption for initial scan ('sealed' or 'opened')"
+        "sealed", description="Package condition ('sealed' or 'opened')"
     ),
     storage_location: str = Query(
-        "refrigerator", description="Storage location ('refrigerator', 'freezer', 'pantry')"
+        "refrigerator", description="Storage location ('refrigerator', 'freezer', or 'pantry')"
     ),
 ):
     try:
@@ -71,11 +71,12 @@ async def detect_food(
 @router.post(
     "/infer",
     response_model=DetectResponse,
-    summary="Alias inference endpoint",
+    summary="Secondary detection endpoint",
 )
 async def infer_alias(
     file: UploadFile = File(...),
     confidence_threshold: float = Query(0.25, ge=0.05, le=0.99),
 ):
     return await detect_food(file=file, confidence_threshold=confidence_threshold)
+
 

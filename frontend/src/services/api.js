@@ -1,6 +1,6 @@
 import { INITIAL_DETECTIONS } from '../mockData';
 
-// When false, throws error instead of silently returning mock detections so failures are visible
+// When false, the client reports errors if the backend is not available
 let fallbackToMock = false;
 
 export function setFallbackToMock(enable) {
@@ -8,7 +8,7 @@ export function setFallbackToMock(enable) {
 }
 
 /**
- * Upload an image (File or Blob) to YOLO detection endpoint
+ * Send an image file to the object detection endpoint.
  */
 export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.25) {
   try {
@@ -19,7 +19,7 @@ export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.25) {
       confidence_threshold: confidenceThreshold.toString(),
     });
 
-    // Calls Vite dev proxy which forwards /api/detect to FastAPI at http://127.0.0.1:8000/api/detect
+    // Send the request to the backend server through the local proxy
     const res = await fetch(`/api/detect?${queryParams}`, {
       method: 'POST',
       body: formData
@@ -35,7 +35,7 @@ export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.25) {
       throw new Error(errMsg);
     }
     const data = await res.json();
-    // Return detections array if backend returned DetectResponse format
+    // Return the detection array from the response object
     return data.detections || data;
   } catch (err) {
     if (fallbackToMock) {
@@ -48,7 +48,7 @@ export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.25) {
 }
 
 /**
- * Send human-in-the-loop correction / false positive payload
+ * Send user corrections and verified items to the feedback endpoint.
  */
 export async function sendFeedback(payload) {
   try {
@@ -61,14 +61,14 @@ export async function sendFeedback(payload) {
     if (!res.ok) throw new Error('Failed to record feedback');
     return await res.json();
   } catch (err) {
-    // Silently fall back to local logging if server isn't up yet
+    // Record data locally if the backend server is not available
     console.log('[API Service] Feedback saved locally:', payload);
     return { status: 'logged_locally', payload };
   }
 }
 
 /**
- * Fetch user inventory from SQLite backend (or localStorage if offline)
+ * Retrieve inventory items from the database or local storage.
  */
 export async function getInventory() {
   try {
@@ -82,7 +82,7 @@ export async function getInventory() {
 }
 
 /**
- * Save confirmed items to backend SQLite (and backup to local storage)
+ * Save confirmed items to the database and update local storage.
  */
 export async function saveInventory(items) {
   localStorage.setItem('fridge_inventory', JSON.stringify(items));
@@ -113,10 +113,10 @@ export async function saveInventory(items) {
 }
 
 /**
- * Calculate dynamic shelf life from USDA FoodKeeper guidelines
+ * Get shelf life in days from the food safety guidelines table.
  */
 export function estimateShelfLife(itemClass, isOpened = false) {
-  // Baseline storage lookup (days) based on USDA FoodKeeper guidelines
+  // Standard storage duration in days based on USDA guidelines
   const shelfLifeRules = {
     milk: { sealed: 7, opened: 4 },
     egg: { sealed: 21, opened: 14 },

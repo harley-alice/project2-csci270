@@ -1,5 +1,5 @@
 :root {
-  /* Theme Colors - WCAG AAA / AA compliant contrast */
+  /* Theme colors - high contrast */
   --color-error: #9E2B00;
   --color-attention: #9E2B00;
   --color-accent: #FFEC89;
@@ -31,7 +31,7 @@ input,
 select {
   font-family: inherit;
   font-size: inherit;
-  min-height: 44px; /* WCAG 2.1 AAA/AA touch target height */
+  min-height: 44px; /* Minimum target height for accessible operation */
 }
 
 button:focus-visible,

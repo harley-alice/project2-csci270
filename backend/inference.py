@@ -1,9 +1,5 @@
 """
-PyTorch & Ultralytics YOLOv8 backend inference handler.
-
-Loads the trained food detection weights, processes raw image uploads into tensors,
-runs inference, formats normalized bounding boxes, and integrates with the
-Hybrid AI Rule Engine to compute dynamic expiration windows.
+Model inference processing module.
 """
 
 from __future__ import annotations
@@ -28,8 +24,7 @@ DEFAULT_WEIGHTS_PATH = PROJECT_ROOT / "ml" / "export" / "food_detector_v8n_basel
 
 class FoodInferenceService:
     """
-    Manages model loading, raw image transformation into tensors,
-    and post-processing detection outputs combined with FoodKeeper rules.
+    Load model weights and process images to identify food items.
     """
 
     def __init__(self, weights_path: Path | str = DEFAULT_WEIGHTS_PATH):
@@ -39,7 +34,7 @@ class FoodInferenceService:
         self._load_model()
 
     def _load_model(self) -> None:
-        """Load trained Ultralytics YOLOv8 weights into device."""
+        """Load the model file onto the computing device."""
         if not self.weights_path.exists():
             logger.warning(
                 "Model weights not found at %s. Inference service will operate in mock mode.",
@@ -51,7 +46,7 @@ class FoodInferenceService:
             logger.info("Loading YOLO weights from %s onto %s...", self.weights_path, self.device)
             self.model = YOLO(str(self.weights_path))
             logger.info("YOLO model loaded successfully. Classes: %d", len(self.model.names))
-            # Quick warm-up inference pass to compile MPS/CUDA kernels ahead of first user request
+            # Run one test frame to prepare the device
             try:
                 dummy_img = Image.new("RGB", (640, 640), color=(128, 128, 128))
                 self.model.predict(source=dummy_img, imgsz=640, device=self.device, verbose=False)
@@ -64,16 +59,15 @@ class FoodInferenceService:
 
     def process_raw_image(self, image_bytes: bytes) -> Image.Image:
         """
-        Validate and preprocess raw image bytes into an RGB PIL Image.
-        Raises ValueError if bytes do not represent a valid image.
+        Validate and convert raw image bytes into an RGB image object.
         """
         if not image_bytes:
             raise ValueError("Uploaded image file is empty.")
 
         try:
             image = Image.open(io.BytesIO(image_bytes))
-            image.verify()  # verify integrity
-            # Reopen because verify() closes the file pointer
+            image.verify()  # Check that file data is complete
+            # Reopen the image because verify closes the byte stream
             image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
             return image
         except Exception as exc:
@@ -88,13 +82,11 @@ class FoodInferenceService:
         storage_location: str = "refrigerator",
     ) -> List[Dict[str, Any]]:
         """
-        Run inference on raw image bytes.
-
-        1. Converts raw image bytes into an RGB tensor.
-        2. Executes YOLO forward pass with NMS and confidence thresholding.
-        3. Normalizes bounding boxes to [ymin, xmin, ymax, xmax] relative to image dimensions.
-        4. Queries Hybrid AI Rule Engine to enrich each detected object with dynamic
-           FoodKeeper shelf life windows based on package state.
+        Identify food items in raw image bytes:
+        1. Convert image bytes to an RGB image.
+        2. Run object detection with certainty thresholding.
+        3. Convert bounding box coordinates to values between 0.0 and 1.0.
+        4. Calculate storage durations from the rule engine.
         """
         image = self.process_raw_image(image_bytes)
         img_w, img_h = image.size
@@ -103,8 +95,7 @@ class FoodInferenceService:
             logger.warning("YOLO model not loaded; returning empty detections.")
             return []
 
-        # Run inference through Ultralytics YOLO with standardized imgsz=640
-        # Passing PIL.Image converts internally to PyTorch tensor on self.device
+        # Execute object detection with fixed 640 pixel size
         results = self.model.predict(
             source=image,
             conf=confidence_threshold,
@@ -130,17 +121,17 @@ class FoodInferenceService:
             raw_label = self.model.names.get(cls_id, f"unknown_{cls_id}")
             conf = float(box.conf.item())
 
-            # Ultralytics xyxy coordinates [xmin, ymin, xmax, ymax]
+            # Bounding box coordinates: [xmin, ymin, xmax, ymax]
             xyxy = box.xyxy[0].tolist()
             xmin, ymin, xmax, ymax = xyxy
 
-            # Normalize to [ymin, xmin, ymax, xmax] between 0.0 and 1.0 (matching frontend format)
+            # Normalize coordinates to values between 0.0 and 1.0
             norm_ymin = max(0.0, min(1.0, ymin / img_h))
             norm_xmin = max(0.0, min(1.0, xmin / img_w))
             norm_ymax = max(0.0, min(1.0, ymax / img_h))
             norm_xmax = max(0.0, min(1.0, xmax / img_w))
 
-            # Query Hybrid Rule Engine
+            # Look up food safety rules
             rule_info = rule_engine.calculate_expiration(
                 food_class=raw_label,
                 package_state=package_state,
@@ -177,6 +168,7 @@ class FoodInferenceService:
         return detections
 
 
-# Singleton instance
+# Service instance
 inference_service = FoodInferenceService()
+
 

@@ -1,5 +1,5 @@
 """
-Pydantic schemas for API request and response data structures.
+Data structure models for the API requests and responses.
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from typing import Any, List, Optional
 from pydantic import BaseModel, Field
 
 
-# --- Inference Schemas ---
+# Item detection models
 
 class DetectionItem(BaseModel):
     id: str
@@ -19,7 +19,7 @@ class DetectionItem(BaseModel):
     days: int
     days_min: int
     days_max: int
-    bbox: List[float] = Field(..., description="[ymin, xmin, ymax, xmax] in normalized 0.0-1.0 range")
+    bbox: List[float] = Field(..., description="[ymin, xmin, ymax, xmax] coordinates from 0.0 to 1.0")
     safety_tier: str
     category_name: str
     package_state: str = "sealed"
@@ -38,7 +38,7 @@ class DetectResponse(BaseModel):
     detections: List[DetectionItem]
 
 
-# --- Rule Calculation Schemas ---
+# Storage calculation models
 
 class RuleCalculationRequest(BaseModel):
     food_class: str
@@ -71,7 +71,7 @@ class RuleCalculationResponse(BaseModel):
     is_urgent: bool
 
 
-# --- Inventory Schemas ---
+# Inventory models
 
 class InventoryItemCreate(BaseModel):
     food_class: str
@@ -145,7 +145,7 @@ class InventoryItemResponse(BaseModel):
     updated_at: str
 
 
-# --- Category & Storage Rule Schemas ---
+# Category and rule models
 
 class CategoryResponse(BaseModel):
     id: int
@@ -172,11 +172,11 @@ class StorageRuleResponse(BaseModel):
     usda_guidance: Optional[str] = None
 
 
-# --- Model Feedback Schemas ---
+# Feedback record models
 
 class ModelFeedbackCreate(BaseModel):
     timestamp: Optional[str] = None
-    type: str = Field(..., description="e.g. 'user_correction', 'false_positive_rejected'")
+    type: str = Field(..., description="Feedback category type")
     image_source: Optional[str] = None
     detection_id: Optional[str] = None
     predicted_label: Optional[str] = None
@@ -189,4 +189,5 @@ class ModelFeedbackResponse(BaseModel):
     success: bool = True
     id: int
     message: str
+
 

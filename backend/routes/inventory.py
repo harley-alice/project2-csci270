@@ -1,5 +1,5 @@
 """
-Inventory CRUD, Item Verification, and Storage Duration Update Endpoints.
+Endpoints for inventory items, item verification, and storage duration updates.
 """
 
 from __future__ import annotations
@@ -74,8 +74,8 @@ def _format_row_to_response(row) -> InventoryItemResponse:
 @router.get(
     "",
     response_model=List[InventoryItemResponse],
-    summary="List fridge inventory items",
-    description="Retrieve all tracked inventory items with calculated remaining shelf life, sorted by urgency.",
+    summary="List stored inventory items",
+    description="Retrieve inventory items with remaining storage days.",
 )
 def list_inventory(
     storage_location: Optional[str] = Query(None, description="Filter by location (e.g. refrigerator)"),
@@ -118,13 +118,13 @@ def list_inventory(
     response_model=InventoryItemResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Add an item to fridge inventory",
-    description="Adds an item. If expiration date is omitted, dynamically calculates it using the FoodKeeper Rule Engine.",
+    description="Adds an item. If expiration date is missing, calculates it with the rule engine.",
 )
 def create_inventory_item(item: InventoryItemCreate):
     today = date.today()
     added_date = datetime.strptime(item.added_date, "%Y-%m-%d").date() if item.added_date else today
 
-    # Dynamic calculation through Rule Engine if expiration or shelf life is not provided
+    # Calculate expiration using rule engine if not specified
     rule_calc = rule_engine.calculate_expiration(
         food_class=item.food_class,
         package_state=item.package_state,
@@ -145,7 +145,7 @@ def create_inventory_item(item: InventoryItemCreate):
     xmax = item.bbox[3] if item.bbox and len(item.bbox) == 4 else None
 
     with get_db() as conn:
-        # Fetch category_id if available
+        # Look up category identifier if present
         cat_cur = conn.execute(
             "SELECT id FROM food_categories WHERE tier = ? LIMIT 1;", (safety_tier,)
         )
@@ -183,7 +183,7 @@ def create_inventory_item(item: InventoryItemCreate):
             ),
         )
 
-        # Retrieve created item
+        # Retrieve the newly added record
         cursor = conn.execute(
             """
             SELECT i.*, c.name as category_name, r.usda_guidance
@@ -207,7 +207,7 @@ def create_inventory_item(item: InventoryItemCreate):
     "/batch",
     response_model=List[InventoryItemResponse],
     status_code=status.HTTP_201_CREATED,
-    summary="Batch add detected items into inventory",
+    summary="Add multiple items to inventory",
 )
 def batch_create_inventory(batch: InventoryBatchCreate):
     created = []
@@ -219,7 +219,7 @@ def batch_create_inventory(batch: InventoryBatchCreate):
 @router.get(
     "/{item_id}",
     response_model=InventoryItemResponse,
-    summary="Get single inventory item by ID",
+    summary="Get one inventory item by ID",
 )
 def get_inventory_item(item_id: str):
     with get_db() as conn:
@@ -270,7 +270,7 @@ def update_inventory_item(item_id: str, update: InventoryItemUpdate):
         user_notes = update.user_notes if update.user_notes is not None else existing["user_notes"]
         verified = update.verified if update.verified is not None else bool(existing["verified"])
 
-        # If food_class, pkg_state, or location changed and no explicit exp_date, recalculate
+        # Recalculate duration if class, package condition, or location changed
         if update.expiration_date:
             exp_date = update.expiration_date
             shelf_life = update.shelf_life_days if update.shelf_life_days is not None else existing["shelf_life_days"]
@@ -351,21 +351,21 @@ def delete_inventory_item(item_id: str):
 @router.post(
     "/{item_id}/verify",
     response_model=InventoryItemResponse,
-    summary="Verify and confirm AI detected item",
-    description="Marks item as verified, optionally updates food class (e.g., resolving a generic class or correcting a false detection), and dynamically recalculates the expiration window.",
+    summary="Confirm or correct an inventory item",
+    description="Marks item as verified, updates the food class, and recalculates expiration dates.",
 )
 @router.put(
     "/{item_id}/verify",
     response_model=InventoryItemResponse,
-    summary="Verify and confirm AI detected item (PUT alias)",
+    summary="Confirm or correct an inventory item (PUT alias)",
 )
 def verify_inventory_item(item_id: str, req: ItemVerifyRequest):
     """
-    User-in-the-loop verification handler:
-    1. Fetches current detection/item.
-    2. Updates food class if user corrected it (e.g. jar -> jam, beef -> ground_beef).
-    3. Runs Hybrid Rule Engine to recalculate safe storage window.
-    4. Records verification event in feedback table.
+    User verification workflow:
+    1. Read the stored item.
+    2. Update values confirmed by user.
+    3. Run rule calculations for new expiration dates.
+    4. Save verification telemetry to feedback table.
     """
     with get_db() as conn:
         cursor = conn.execute("SELECT * FROM inventory_items WHERE id = ?;", (item_id,))
@@ -382,7 +382,7 @@ def verify_inventory_item(item_id: str, req: ItemVerifyRequest):
         location = req.storage_location or item["storage_location"]
         is_cooked = req.is_cooked if req.is_cooked is not None else bool(item["is_cooked"])
 
-        # Dynamically recalculate expiration based on verified information
+        # Calculate new expiration window from verified data
         calc = rule_engine.calculate_expiration(
             food_class=target_class,
             package_state=pkg_state,
@@ -423,7 +423,7 @@ def verify_inventory_item(item_id: str, req: ItemVerifyRequest):
             ),
         )
 
-        # Log feedback telemetry if class was corrected
+        # Record feedback record if class was changed
         if target_class != orig_class:
             bbox_json = None
             if item["bbox_ymin"] is not None:
@@ -470,20 +470,20 @@ def verify_inventory_item(item_id: str, req: ItemVerifyRequest):
 @router.patch(
     "/{item_id}/duration",
     response_model=InventoryItemResponse,
-    summary="Update storage duration and package state",
-    description="Dynamically updates expiration dates when package is opened or storage condition changes (e.g. moved to freezer).",
+    summary="Update package state and storage duration",
+    description="Updates expiration dates when package state or storage location changes.",
 )
 @router.put(
     "/{item_id}/storage-duration",
     response_model=InventoryItemResponse,
-    summary="Update storage duration and package state (PUT alias)",
+    summary="Update package state and storage duration (PUT alias)",
 )
 def update_storage_duration(item_id: str, req: StorageDurationUpdateRequest):
     """
-    Handles dynamic duration transitions:
-    - User marks package 'opened' -> FoodKeeper opened rule applied.
-    - User moves item to 'freezer' -> Freezer shelf life rule applied.
-    - User inputs custom shelf life override.
+    Handle storage duration changes:
+    - User marks item opened -> calculate opened storage duration.
+    - User moves item to freezer -> calculate freezer duration.
+    - User enters custom duration override.
     """
     with get_db() as conn:
         cursor = conn.execute("SELECT * FROM inventory_items WHERE id = ?;", (item_id,))
@@ -549,4 +549,5 @@ def update_storage_duration(item_id: str, req: StorageDurationUpdateRequest):
             (item_id,),
         )
         return _format_row_to_response(cursor.fetchone())
+
 
