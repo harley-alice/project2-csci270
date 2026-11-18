@@ -1,6 +1,6 @@
 import React from 'react';
 import BoundingBoxOverlay from './BoundingBoxOverlay';
-import FunDateOpenedPicker from './FunDateOpenedPicker';
+import DateOpenedField from './DateOpenedField';
 import { formatLabel, formatDateDisplay, getTodayDateStr } from '../utils/dateUtils';
 
 /**
@@ -337,10 +337,10 @@ export default function ReviewSection({
                       )}
                     </div>
 
-                    {/* Fun Month & Year Date Opened Box */}
-                    {isOpened ? (
+                    {/* Date opened selector when package state is opened */}
+                    {isOpened && (
                       <div>
-                        <FunDateOpenedPicker
+                        <DateOpenedField
                           value={it.openedDate || today}
                           onChange={(newDate) => updateOpenedDate(it.id, newDate)}
                           isUnsure={it.isUnsureOpened}
@@ -351,34 +351,16 @@ export default function ReviewSection({
                         {it.previewExpiry && (
                           <div
                             style={{
-                              fontSize: '11px',
-                              color: 'var(--color-text-muted)',
-                              marginTop: '6px',
-                              padding: '2px 4px'
+                              fontSize: '12px',
+                              color: 'var(--color-text)',
+                              marginTop: '8px',
+                              padding: '6px 8px',
+                              background: '#f4f6fb',
+                              border: '1px solid var(--color-primary-accent)'
                             }}
                           >
-                            Predicted Expiry: <strong style={{ color: 'var(--color-text)' }}>{formatDateDisplay(it.previewExpiry)}</strong>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      /* Sealed Items: show date added & preview expiration */
-                      <div
-                        style={{
-                          background: '#f9f9f9',
-                          border: '1px solid #e5e5e5',
-                          borderRadius: '6px',
-                          padding: '6px 8px',
-                          fontSize: '11px',
-                          color: 'var(--color-text-muted)'
-                        }}
-                      >
-                        <div>
-                          Storage starts: <strong>{formatDateDisplay(today)}</strong> (Today)
-                        </div>
-                        {it.previewExpiry && (
-                          <div style={{ marginTop: '2px' }}>
-                            Predicted Expiry: <strong style={{ color: 'var(--color-text)' }}>{formatDateDisplay(it.previewExpiry)}</strong>
+                            Predicted Expiration:{' '}
+                            <strong>{formatDateDisplay(it.previewExpiry)}</strong>
                           </div>
                         )}
                       </div>

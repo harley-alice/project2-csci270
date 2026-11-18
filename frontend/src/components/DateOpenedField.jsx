@@ -1,19 +1,23 @@
 import React from 'react';
 import { getTodayDateStr } from '../utils/dateUtils';
 
-// Standard month abbreviations
+// 12-month calendar names
 const MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
 /**
- * FunDateOpenedPicker Component
- * Renders an interactive segmented Month, Day, and Year selector box
- * with quick shortcuts ("Today", "Yesterday", "3d ago") and an "Unsure" toggle
- * that applies Ashton's conservative FoodKeeper guidelines.
+ * DateOpenedField Component
+ * 
+ * Follows Don Norman's UI & Design of Everyday Things principles:
+ * 1. Affordance & Signifiers: Uses standard interactive dropdowns and clear labels.
+ * 2. Feedback: Immediate visual feedback when switching between explicit date and "Unsure".
+ * 3. Constraints: Days in month automatically adjust to month/year (no February 31st).
+ * 4. Conceptual Consistency: Zero emojis or gradient boxes; strict 1px solid var(--color-border),
+ *    clean 44px min-height targets, var(--color-primary-accent) and var(--color-attention).
  */
-export default function FunDateOpenedPicker({
+export default function DateOpenedField({
   value,
   onChange,
   isUnsure,
@@ -27,11 +31,11 @@ export default function FunDateOpenedPicker({
   const monthIdx = (parseInt(parts[1], 10) || 1) - 1;
   const day = parseInt(parts[2], 10) || 1;
 
-  // Compute number of days in the current selected month
+  // Natural calendar constraints: exact days in selected month & year
   const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
   const dayOptions = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  // Available years: current year and prior year
+  // Reasonable year range (current year and prior year)
   const currentYear = new Date().getFullYear();
   const yearOptions = [currentYear - 1, currentYear];
 
@@ -55,9 +59,13 @@ export default function FunDateOpenedPicker({
     onChange(`${newYear}-${monthNum}-${dayNum}`);
   };
 
-  const setRelativeDaysAgo = (daysAgo) => {
+  const setToday = () => {
+    onChange(todayStr);
+  };
+
+  const setYesterday = () => {
     const d = new Date();
-    d.setDate(d.getDate() - daysAgo);
+    d.setDate(d.getDate() - 1);
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const dt = String(d.getDate()).padStart(2, '0');
@@ -65,42 +73,41 @@ export default function FunDateOpenedPicker({
   };
 
   return (
-    <div
+    <fieldset
       style={{
-        border: isUnsure ? '2px solid var(--color-attention)' : '2px solid var(--color-primary-accent)',
-        background: isUnsure ? '#fff9f8' : '#f8fafd',
-        padding: '10px 12px',
-        borderRadius: '8px',
-        marginTop: '8px',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.06)'
+        border: '1px solid var(--color-border)',
+        padding: '12px 14px',
+        margin: '8px 0 0 0',
+        background: isUnsure ? '#fff9f8' : '#fafafa',
+        boxSizing: 'border-box'
       }}
     >
-      {/* Header bar with title and Unsure button */}
+      <legend
+        style={{
+          fontSize: '12px',
+          fontWeight: 700,
+          padding: '0 6px',
+          color: isUnsure ? 'var(--color-attention)' : 'var(--color-text)'
+        }}
+      >
+        Date Package Opened
+      </legend>
+
+      {/* Primary Action / Mode Toggle */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '8px',
+          marginBottom: '10px',
           gap: '8px',
           flexWrap: 'wrap'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '14px' }}>📅</span>
-          <span
-            style={{
-              fontSize: '12px',
-              fontWeight: 700,
-              color: 'var(--color-text)',
-              letterSpacing: '0.2px'
-            }}
-          >
-            Date Opened
-          </span>
-        </div>
+        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+          {isUnsure ? 'Opening date is unknown' : 'Specify when package was opened:'}
+        </span>
 
-        {/* Unsure button */}
         <button
           type="button"
           onClick={onToggleUnsure}
@@ -108,74 +115,70 @@ export default function FunDateOpenedPicker({
           style={{
             background: isUnsure ? 'var(--color-attention)' : '#ffffff',
             color: isUnsure ? '#ffffff' : 'var(--color-attention)',
-            border: '1.5px solid var(--color-attention)',
-            padding: '3px 10px',
-            fontSize: '11px',
-            fontWeight: 700,
+            border: isUnsure ? '1px solid var(--color-attention)' : '1px solid var(--color-border)',
+            padding: '6px 12px',
+            fontSize: '12px',
+            fontWeight: 600,
             cursor: 'pointer',
-            borderRadius: '4px',
-            minHeight: '28px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px'
+            minHeight: '36px',
+            borderRadius: 0
           }}
         >
-          {isUnsure ? '✓ Unsure (Conservative Active)' : '? Unsure when opened'}
+          {isUnsure ? 'Unsure (Conservative Applied)' : 'Unsure when opened'}
         </button>
       </div>
 
       {isUnsure ? (
         <div
+          role="status"
           style={{
             fontSize: '12px',
             color: 'var(--color-attention)',
             lineHeight: '1.4',
-            padding: '6px 8px',
+            padding: '8px 10px',
             background: '#ffffff',
-            border: '1px solid #ffd0c7',
-            borderRadius: '4px'
+            border: '1px solid var(--color-attention)'
           }}
         >
-          <strong>Safety mode:</strong> Using Ashton's conservative minimum shelf life estimate because opening date is unknown.
+          <strong>Conservative Safety Guideline:</strong> Because the opening date is uncertain, shelf-life is calculated using the minimum USDA FoodKeeper window.
         </div>
       ) : (
-        <>
-          {/* Segmented Month, Day, Year Selector Boxes */}
+        <div>
+          {/* Segmented Month, Day, Year Selectors */}
           <div
             style={{
-              display: 'flex',
-              gap: '6px',
-              alignItems: 'center',
-              marginBottom: '8px'
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr 1.2fr',
+              gap: '8px',
+              marginBottom: '10px'
             }}
           >
-            {/* Month Box */}
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1.5 }}>
+            {/* Month */}
+            <div>
               <label
-                htmlFor={`month-select-${label}`}
+                htmlFor={`month-field-${label}`}
                 style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
+                  display: 'block',
+                  fontSize: '11px',
+                  fontWeight: 600,
                   color: 'var(--color-text-muted)',
-                  marginBottom: '2px'
+                  marginBottom: '4px'
                 }}
               >
                 Month
               </label>
               <select
-                id={`month-select-${label}`}
+                id={`month-field-${label}`}
                 value={monthIdx}
                 onChange={(e) => handleMonthChange(parseInt(e.target.value, 10))}
                 style={{
-                  padding: '6px 4px',
-                  fontSize: '13px',
-                  fontWeight: 600,
+                  width: '100%',
                   border: '1px solid var(--color-border)',
-                  borderRadius: '4px',
                   background: '#ffffff',
-                  minHeight: '36px',
-                  cursor: 'pointer'
+                  padding: '6px 8px',
+                  fontSize: '13px',
+                  minHeight: '40px',
+                  borderRadius: 0
                 }}
               >
                 {MONTHS.map((m, idx) => (
@@ -186,34 +189,32 @@ export default function FunDateOpenedPicker({
               </select>
             </div>
 
-            {/* Day Box */}
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+            {/* Day */}
+            <div>
               <label
-                htmlFor={`day-select-${label}`}
+                htmlFor={`day-field-${label}`}
                 style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
+                  display: 'block',
+                  fontSize: '11px',
+                  fontWeight: 600,
                   color: 'var(--color-text-muted)',
-                  marginBottom: '2px'
+                  marginBottom: '4px'
                 }}
               >
                 Day
               </label>
               <select
-                id={`day-select-${label}`}
+                id={`day-field-${label}`}
                 value={day}
                 onChange={(e) => handleDayChange(parseInt(e.target.value, 10))}
                 style={{
-                  padding: '6px 4px',
-                  fontSize: '13px',
-                  fontWeight: 600,
+                  width: '100%',
                   border: '1px solid var(--color-border)',
-                  borderRadius: '4px',
                   background: '#ffffff',
-                  minHeight: '36px',
-                  cursor: 'pointer',
-                  textAlign: 'center'
+                  padding: '6px 8px',
+                  fontSize: '13px',
+                  minHeight: '40px',
+                  borderRadius: 0
                 }}
               >
                 {dayOptions.map((d) => (
@@ -224,33 +225,32 @@ export default function FunDateOpenedPicker({
               </select>
             </div>
 
-            {/* Year Box */}
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1.2 }}>
+            {/* Year */}
+            <div>
               <label
-                htmlFor={`year-select-${label}`}
+                htmlFor={`year-field-${label}`}
                 style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
+                  display: 'block',
+                  fontSize: '11px',
+                  fontWeight: 600,
                   color: 'var(--color-text-muted)',
-                  marginBottom: '2px'
+                  marginBottom: '4px'
                 }}
               >
                 Year
               </label>
               <select
-                id={`year-select-${label}`}
+                id={`year-field-${label}`}
                 value={year}
                 onChange={(e) => handleYearChange(parseInt(e.target.value, 10))}
                 style={{
-                  padding: '6px 4px',
-                  fontSize: '13px',
-                  fontWeight: 600,
+                  width: '100%',
                   border: '1px solid var(--color-border)',
-                  borderRadius: '4px',
                   background: '#ffffff',
-                  minHeight: '36px',
-                  cursor: 'pointer'
+                  padding: '6px 8px',
+                  fontSize: '13px',
+                  minHeight: '40px',
+                  borderRadius: 0
                 }}
               >
                 {yearOptions.map((y) => (
@@ -262,60 +262,45 @@ export default function FunDateOpenedPicker({
             </div>
           </div>
 
-          {/* Quick preset chips */}
-          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginRight: '2px' }}>
-              Quick:
+          {/* Quick preset affordances */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+              Set to:
             </span>
             <button
               type="button"
-              onClick={() => setRelativeDaysAgo(0)}
+              onClick={setToday}
               style={{
                 background: '#ffffff',
                 border: '1px solid var(--color-border)',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '11px',
+                padding: '4px 10px',
+                fontSize: '12px',
                 fontWeight: 600,
                 cursor: 'pointer',
-                minHeight: '26px'
+                minHeight: '32px',
+                borderRadius: 0
               }}
             >
               Today
             </button>
             <button
               type="button"
-              onClick={() => setRelativeDaysAgo(1)}
+              onClick={setYesterday}
               style={{
                 background: '#ffffff',
                 border: '1px solid var(--color-border)',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '11px',
+                padding: '4px 10px',
+                fontSize: '12px',
                 cursor: 'pointer',
-                minHeight: '26px'
+                minHeight: '32px',
+                borderRadius: 0
               }}
             >
               Yesterday
             </button>
-            <button
-              type="button"
-              onClick={() => setRelativeDaysAgo(3)}
-              style={{
-                background: '#ffffff',
-                border: '1px solid var(--color-border)',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                cursor: 'pointer',
-                minHeight: '26px'
-              }}
-            >
-              3 days ago
-            </button>
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </fieldset>
   );
 }
