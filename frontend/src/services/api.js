@@ -1,54 +1,124 @@
-import { INITIAL_DETECTIONS } from '../mockData';
-
-// When false, the client reports errors if the backend is not available
-let fallbackToMock = false;
-
-export function setFallbackToMock(enable) {
-  fallbackToMock = enable;
-}
-
 /**
- * Send an image file to the object detection endpoint.
+ * API service for communicating with the backend FastAPI server.
+ * All functions connect directly to backend endpoints powered by
+ * the YOLO detection model and Ashton's USDA FoodKeeper database.
  */
-export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.25) {
+
+// Helper to check for JSON error responses
+async function parseError(response, defaultMsg) {
+  let message = `${defaultMsg} (status: ${response.status})`;
   try {
-    const formData = new FormData();
-    formData.append('file', imageBlob, 'fridge_scan.jpg');
-
-    const queryParams = new URLSearchParams({
-      confidence_threshold: confidenceThreshold.toString(),
-    });
-
-    // Send the request to the backend server through the local proxy
-    const res = await fetch(`/api/detect?${queryParams}`, {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!res.ok) {
-      let errMsg = `Detection failed with status: ${res.status}`;
-      try {
-        const errJson = await res.json();
-        if (errJson && errJson.detail) errMsg = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
-        else if (errJson && errJson.error) errMsg = errJson.error;
-      } catch (_) { }
-      throw new Error(errMsg);
+    const errJson = await response.json();
+    if (errJson && errJson.detail) {
+      message = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+    } else if (errJson && errJson.error) {
+      message = errJson.error;
     }
-    const data = await res.json();
-    // Return the detection array from the response object
-    return data.detections || data;
-  } catch (err) {
-    if (fallbackToMock) {
-      console.warn('[API Service] Backend /api/detect offline, using local mock detections.');
-      await new Promise((r) => setTimeout(r, 600));
-      return INITIAL_DETECTIONS;
-    }
-    throw err;
+  } catch (_) {
+    // Response was not JSON
   }
+  return new Error(message);
 }
 
 /**
- * Send user corrections and verified items to the feedback endpoint.
+ * Send an image blob or file to the YOLO object detection endpoint.
+ *
+ * @param {Blob|File} imageBlob - The image file to analyze
+ * @param {number} confidenceThreshold - Minimum certainty cut-off (0.05 to 0.95)
+ * @returns {Promise<Array>} List of detected items with bounding boxes and safety rules
+ */
+export async function detectFridgeItems(imageBlob, confidenceThreshold = 0.20) {
+  const formData = new FormData();
+  formData.append('file', imageBlob, 'fridge_scan.jpg');
+
+  const queryParams = new URLSearchParams({
+    confidence_threshold: confidenceThreshold.toString()
+  });
+
+  const res = await fetch(`/api/detect?${queryParams}`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!res.ok) {
+    throw await parseError(res, 'Item detection failed');
+  }
+
+  const data = await res.json();
+  // Return the detections array returned by the FastAPI inference endpoint
+  return data.detections || data || [];
+}
+
+/**
+ * Fetch all food safety categories and tiers from the FoodKeeper database.
+ *
+ * @returns {Promise<Array>} List of category objects
+ */
+export async function getCategories() {
+  const res = await fetch('/api/categories');
+  if (!res.ok) {
+    throw await parseError(res, 'Failed to fetch categories');
+  }
+  return await res.json();
+}
+
+/**
+ * Fetch all storage rules from Ashton's USDA FoodKeeper database.
+ * Used by the frontend to dynamically populate food classes and default shelf lives.
+ *
+ * @returns {Promise<Array>} List of storage rule objects
+ */
+export async function getStorageRules() {
+  const res = await fetch('/api/rules');
+  if (!res.ok) {
+    throw await parseError(res, 'Failed to fetch storage rules');
+  }
+  return await res.json();
+}
+
+/**
+ * Calculate the expiration date and shelf life using Ashton's USDA FoodKeeper rule engine.
+ *
+ * @param {string} foodClass - The class identifier (e.g. 'milk', 'chicken')
+ * @param {string} packageState - 'sealed' or 'opened'
+ * @param {string} storageLocation - 'refrigerator', 'freezer', or 'pantry'
+ * @param {boolean} isCooked - Whether the food is cooked
+ * @param {string|null} startDate - The start date string in 'YYYY-MM-DD' format
+ * @returns {Promise<Object>} Calculated shelf life, dates, and advisory guidance
+ */
+export async function calculateRule({
+  foodClass,
+  packageState = 'sealed',
+  storageLocation = 'refrigerator',
+  isCooked = false,
+  startDate = null
+}) {
+  const payload = {
+    food_class: foodClass,
+    package_state: packageState,
+    storage_location: storageLocation,
+    is_cooked: isCooked,
+    start_date: startDate || undefined
+  };
+
+  const res = await fetch('/api/rules/calculate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    throw await parseError(res, 'Failed to calculate food rule');
+  }
+
+  return await res.json();
+}
+
+/**
+ * Send user adjustments and corrections to the active learning feedback endpoint.
+ *
+ * @param {Object} payload - Feedback data including label corrections or false positives
+ * @returns {Promise<Object>} Status response
  */
 export async function sendFeedback(payload) {
   try {
@@ -58,94 +128,77 @@ export async function sendFeedback(payload) {
       body: JSON.stringify(payload)
     });
 
-    if (!res.ok) throw new Error('Failed to record feedback');
+    if (!res.ok) {
+      throw await parseError(res, 'Failed to record feedback');
+    }
     return await res.json();
   } catch (err) {
-    // Record data locally if the backend server is not available
-    console.log('[API Service] Feedback saved locally:', payload);
-    return { status: 'logged_locally', payload };
+    console.warn('[API Service] Feedback recording encountered an issue:', err);
+    return { status: 'failed', error: err.message };
   }
 }
 
 /**
- * Retrieve inventory items from the database or local storage.
+ * Retrieve saved fridge inventory items from the database.
+ *
+ * @returns {Promise<Array>} List of inventory items
  */
 export async function getInventory() {
-  try {
-    const res = await fetch('/api/inventory');
-    if (!res.ok) throw new Error('Failed to fetch inventory');
-    return await res.json();
-  } catch (err) {
-    const saved = localStorage.getItem('fridge_inventory');
-    return saved ? JSON.parse(saved) : null;
+  const res = await fetch('/api/inventory');
+  if (!res.ok) {
+    throw await parseError(res, 'Failed to fetch inventory');
   }
+  return await res.json();
 }
 
 /**
- * Save confirmed items to the database and update local storage.
+ * Save new or verified items to the fridge inventory database in a single batch.
+ *
+ * @param {Array} items - List of item objects to store
+ * @returns {Promise<Object>} Response from the inventory batch endpoint
  */
 export async function saveInventory(items) {
-  localStorage.setItem('fridge_inventory', JSON.stringify(items));
-  try {
-    const formattedItems = items.map((it) => ({
-      food_class: it.label || it.food_class,
-      custom_name: it.custom_name || (it.label ? it.label.replace(/_/g, ' ') : null),
-      package_state: it.packageState || it.package_state || 'sealed',
-      storage_location: it.storage_location || 'refrigerator',
-      shelf_life_days: it.days || it.shelf_life_days || 7,
-      verified: Boolean(it.verified || it.userEdited),
-      confidence: it.confidence !== undefined ? it.confidence : 1.0,
-      bbox: it.bbox || null,
-      user_notes: it.user_notes || null
-    }));
+  const formattedItems = items.map((it) => ({
+    food_class: it.label || it.food_class,
+    custom_name: it.custom_name || (it.label ? it.label.replace(/_/g, ' ') : null),
+    package_state: it.packageState || it.package_state || 'sealed',
+    storage_location: it.storage_location || 'refrigerator',
+    shelf_life_days: parseInt(it.days ?? it.shelf_life_days ?? 7, 10),
+    expiration_date: it.expirationDate || it.expiration_date || null,
+    added_date: it.addedDate || it.added_date || null,
+    verified: Boolean(it.verified || it.userEdited),
+    confidence: it.confidence !== undefined ? it.confidence : 1.0,
+    bbox: it.bbox || null,
+    user_notes: it.user_notes || (it.isUnsureOpened ? 'Marked unsure opening date' : null)
+  }));
 
-    const res = await fetch('/api/inventory/batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: formattedItems })
-    });
-    if (!res.ok) throw new Error('Failed to save to backend');
-    return await res.json();
-  } catch (err) {
-    console.log('[API Service] Saved to local browser storage.');
-    return { status: 'saved_locally' };
+  const res = await fetch('/api/inventory/batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: formattedItems })
+  });
+
+  if (!res.ok) {
+    throw await parseError(res, 'Failed to save items to inventory database');
   }
+
+  return await res.json();
 }
 
 /**
- * Get shelf life in days from the food safety guidelines table.
+ * Remove an item from the fridge inventory database by its unique ID.
+ *
+ * @param {string} id - The ID of the item to delete
+ * @returns {Promise<Object>} Deletion result
  */
-export function estimateShelfLife(itemClass, isOpened = false) {
-  // Standard storage duration in days based on USDA guidelines
-  const shelfLifeRules = {
-    milk: { sealed: 7, opened: 4 },
-    egg: { sealed: 21, opened: 14 },
-    yogurt: { sealed: 14, opened: 7 },
-    chicken: { sealed: 2, opened: 1 },
-    beef: { sealed: 4, opened: 2 },
-    bacon: { sealed: 14, opened: 7 },
-    cheese: { sealed: 21, opened: 14 },
-    goat_cheese: { sealed: 14, opened: 7 },
-    butter: { sealed: 30, opened: 21 },
-    cream: { sealed: 10, opened: 5 },
-    apple: { sealed: 21, opened: 14 },
-    banana: { sealed: 5, opened: 3 },
-    strawberries: { sealed: 5, opened: 3 },
-    blueberries: { sealed: 7, opened: 4 },
-    orange: { sealed: 14, opened: 10 },
-    lemon: { sealed: 21, opened: 14 },
-    lime: { sealed: 21, opened: 14 },
-    tomato: { sealed: 7, opened: 4 },
-    bell_pepper: { sealed: 10, opened: 5 },
-    carrot: { sealed: 21, opened: 14 },
-    spinach: { sealed: 5, opened: 3 },
-    mushrooms: { sealed: 5, opened: 3 },
-    bread: { sealed: 7, opened: 5 },
-    shrimp: { sealed: 2, opened: 1 },
-    jar: { sealed: 30, opened: 14 }
-  };
+export async function deleteInventoryItem(id) {
+  const res = await fetch(`/api/inventory/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
 
-  const rule = shelfLifeRules[itemClass] || { sealed: 7, opened: 5 };
-  return isOpened ? rule.opened : rule.sealed;
+  if (!res.ok) {
+    throw await parseError(res, 'Failed to delete inventory item');
+  }
+
+  return await res.json();
 }
-
