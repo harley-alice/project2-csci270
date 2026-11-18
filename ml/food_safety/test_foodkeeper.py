@@ -90,3 +90,41 @@ if __name__ == "__main__":
     test_unidentified_containers()
 
     print("\nAll FoodKeeper integration utility tests passed.")
+
+
+# Tests ensuring containers are not treated as food items.
+
+import pytest
+
+
+@pytest.mark.parametrize("food_class", ["jar", "soda_can"])
+def test_containers_have_no_foodkeeper_recommendations(food_class):
+    from ml.food_safety.foodkeeper import get_recommendations
+
+    assert get_recommendations(food_class) == []
+
+
+@pytest.mark.parametrize("food_class", ["jar", "soda_can"])
+def test_containers_require_content_identification(food_class):
+    from ml.food_safety.foodkeeper import get_foodkeeper_selection
+
+    selection = get_foodkeeper_selection(food_class)
+
+    assert selection["candidates"] == []
+    assert selection["requires_confirmation"] is True
+    assert selection["selected_record"] is None
+    assert selection["ready_for_guidance"] is False
+
+
+@pytest.mark.parametrize("food_class", ["jar", "soda_can"])
+def test_containers_cannot_receive_storage_guidance(food_class):
+    from ml.food_safety.foodkeeper import get_confirmed_storage_guidance
+
+    selection = {
+        "food_class": food_class,
+        "ready_for_guidance": True,
+        "selected_record": {"food_name": "Example"},
+    }
+
+    with pytest.raises(ValueError, match="unidentified container"):
+        get_confirmed_storage_guidance(selection)

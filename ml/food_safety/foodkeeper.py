@@ -7,6 +7,15 @@ from typing import Any
 import yaml
 
 
+CONTAINER_CLASSES = {"jar", "soda_can"}
+
+
+def _is_container_class(food_class):
+    normalized = str(food_class or "").strip().lower()
+    normalized = normalized.replace("-", "_").replace(" ", "_")
+    return normalized in CONTAINER_CLASSES
+
+
 # --------------------------------------------------
 # File paths
 # --------------------------------------------------
@@ -357,6 +366,9 @@ def get_recommendations(
     candidates. This prevents unrelated products from being
     returned through broad name searches.
     """
+    if _is_container_class(food_class):
+        return []
+
 
     norm_class = str(food_class).strip().lower().replace("-", "_")
     if norm_class in EXCLUDED_CONTAINER_CLASSES:
@@ -462,6 +474,21 @@ def get_foodkeeper_selection(
     A class with requires_user_detail=True must have both a
     selected Product ID and explicit user confirmation.
     """
+    if _is_container_class(food_class):
+        normalized_class = str(food_class or "").strip().lower()
+        normalized_class = normalized_class.replace("-", "_").replace(" ", "_")
+        return {
+            "food_class": normalized_class,
+            "candidates": [],
+            "requires_confirmation": True,
+            "confirmation_prompt": (
+                "This is a container, not a food item. "
+                "Identify its contents before requesting FoodKeeper guidance."
+            ),
+            "selected_record": None,
+            "ready_for_guidance": False,
+        }
+
 
     norm_class = str(food_class).strip().lower().replace("-", "_")
     if norm_class in EXCLUDED_CONTAINER_CLASSES:
@@ -605,6 +632,11 @@ def get_confirmed_storage_guidance(
     Return storage guidance only after a specific FoodKeeper
     product has passed the confirmation workflow.
     """
+    if _is_container_class(selection.get("food_class")):
+        raise ValueError(
+            "Storage guidance cannot be provided for an unidentified container."
+        )
+
 
     food_class = str(selection.get("food_class", "")).strip().lower().replace("-", "_")
     if food_class in EXCLUDED_CONTAINER_CLASSES:
