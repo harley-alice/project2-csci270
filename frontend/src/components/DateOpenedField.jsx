@@ -1,5 +1,5 @@
 import React from 'react';
-import { getTodayDateStr } from '../utils/dateUtils';
+import { getTodayDateStr, formatDateDisplay } from '../utils/dateUtils';
 
 // 12-month calendar names
 const MONTHS = [
@@ -10,18 +10,17 @@ const MONTHS = [
 /**
  * DateOpenedField Component
  * 
- * Follows Don Norman's UI & Design of Everyday Things principles:
- * 1. Affordance & Signifiers: Uses standard interactive dropdowns and clear labels.
- * 2. Feedback: Immediate visual feedback when switching between explicit date and "Unsure".
- * 3. Constraints: Days in month automatically adjust to month/year (no February 31st).
- * 4. Conceptual Consistency: Zero emojis or gradient boxes; strict 1px solid var(--color-border),
- *    clean 44px min-height targets, var(--color-primary-accent) and var(--color-attention).
+ * Don Norman Design Principles:
+ * 1. Visual Hierarchy & Proportions: Fits properly within the table cell without squeezing adjacent columns.
+ * 2. Natural Constraints: Dynamically adjusts day count based on month and year.
+ * 3. Feedback: Highlights state and predicted expiration clearly with high contrast.
  */
 export default function DateOpenedField({
   value,
   onChange,
   isUnsure,
   onToggleUnsure,
+  previewExpiry,
   label
 }) {
   const todayStr = getTodayDateStr();
@@ -35,7 +34,7 @@ export default function DateOpenedField({
   const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
   const dayOptions = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  // Reasonable year range (current year and prior year)
+  // Available years: current year and prior year
   const currentYear = new Date().getFullYear();
   const yearOptions = [currentYear - 1, currentYear];
 
@@ -73,27 +72,18 @@ export default function DateOpenedField({
   };
 
   return (
-    <fieldset
+    <div
       style={{
         border: '1px solid var(--color-border)',
         padding: '12px 14px',
-        margin: '8px 0 0 0',
+        margin: '6px 0 0 0',
         background: isUnsure ? '#fff9f8' : '#fafafa',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        width: '100%',
+        maxWidth: '380px'
       }}
     >
-      <legend
-        style={{
-          fontSize: '12px',
-          fontWeight: 700,
-          padding: '0 6px',
-          color: isUnsure ? 'var(--color-attention)' : 'var(--color-text)'
-        }}
-      >
-        Date Package Opened
-      </legend>
-
-      {/* Primary Action / Mode Toggle */}
+      {/* Header bar with toggle */}
       <div
         style={{
           display: 'flex',
@@ -104,8 +94,14 @@ export default function DateOpenedField({
           flexWrap: 'wrap'
         }}
       >
-        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-          {isUnsure ? 'Opening date is unknown' : 'Specify when package was opened:'}
+        <span
+          style={{
+            fontSize: '12px',
+            fontWeight: 700,
+            color: isUnsure ? 'var(--color-attention)' : 'var(--color-text)'
+          }}
+        >
+          Date Package Opened
         </span>
 
         <button
@@ -116,11 +112,11 @@ export default function DateOpenedField({
             background: isUnsure ? 'var(--color-attention)' : '#ffffff',
             color: isUnsure ? '#ffffff' : 'var(--color-attention)',
             border: isUnsure ? '1px solid var(--color-attention)' : '1px solid var(--color-border)',
-            padding: '6px 12px',
-            fontSize: '12px',
+            padding: '4px 10px',
+            fontSize: '11px',
             fontWeight: 600,
             cursor: 'pointer',
-            minHeight: '36px',
+            minHeight: '32px',
             borderRadius: 0
           }}
         >
@@ -140,7 +136,7 @@ export default function DateOpenedField({
             border: '1px solid var(--color-attention)'
           }}
         >
-          <strong>Conservative Safety Guideline:</strong> Because the opening date is uncertain, shelf-life is calculated using the minimum USDA FoodKeeper window.
+          <strong>Conservative Safety Guideline:</strong> Shelf-life shortened using USDA FoodKeeper minimum window.
         </div>
       ) : (
         <div>
@@ -148,7 +144,7 @@ export default function DateOpenedField({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1.2fr',
+              gridTemplateColumns: 'minmax(120px, 1.8fr) minmax(65px, 1fr) minmax(75px, 1.2fr)',
               gap: '8px',
               marginBottom: '10px'
             }}
@@ -162,7 +158,7 @@ export default function DateOpenedField({
                   fontSize: '11px',
                   fontWeight: 600,
                   color: 'var(--color-text-muted)',
-                  marginBottom: '4px'
+                  marginBottom: '3px'
                 }}
               >
                 Month
@@ -177,7 +173,7 @@ export default function DateOpenedField({
                   background: '#ffffff',
                   padding: '6px 8px',
                   fontSize: '13px',
-                  minHeight: '40px',
+                  minHeight: '38px',
                   borderRadius: 0
                 }}
               >
@@ -198,7 +194,7 @@ export default function DateOpenedField({
                   fontSize: '11px',
                   fontWeight: 600,
                   color: 'var(--color-text-muted)',
-                  marginBottom: '4px'
+                  marginBottom: '3px'
                 }}
               >
                 Day
@@ -213,7 +209,7 @@ export default function DateOpenedField({
                   background: '#ffffff',
                   padding: '6px 8px',
                   fontSize: '13px',
-                  minHeight: '40px',
+                  minHeight: '38px',
                   borderRadius: 0
                 }}
               >
@@ -234,7 +230,7 @@ export default function DateOpenedField({
                   fontSize: '11px',
                   fontWeight: 600,
                   color: 'var(--color-text-muted)',
-                  marginBottom: '4px'
+                  marginBottom: '3px'
                 }}
               >
                 Year
@@ -249,7 +245,7 @@ export default function DateOpenedField({
                   background: '#ffffff',
                   padding: '6px 8px',
                   fontSize: '13px',
-                  minHeight: '40px',
+                  minHeight: '38px',
                   borderRadius: 0
                 }}
               >
@@ -264,7 +260,7 @@ export default function DateOpenedField({
 
           {/* Quick preset affordances */}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
               Set to:
             </span>
             <button
@@ -273,11 +269,11 @@ export default function DateOpenedField({
               style={{
                 background: '#ffffff',
                 border: '1px solid var(--color-border)',
-                padding: '4px 10px',
-                fontSize: '12px',
+                padding: '3px 8px',
+                fontSize: '11px',
                 fontWeight: 600,
                 cursor: 'pointer',
-                minHeight: '32px',
+                minHeight: '28px',
                 borderRadius: 0
               }}
             >
@@ -289,10 +285,10 @@ export default function DateOpenedField({
               style={{
                 background: '#ffffff',
                 border: '1px solid var(--color-border)',
-                padding: '4px 10px',
-                fontSize: '12px',
+                padding: '3px 8px',
+                fontSize: '11px',
                 cursor: 'pointer',
-                minHeight: '32px',
+                minHeight: '28px',
                 borderRadius: 0
               }}
             >
@@ -301,6 +297,22 @@ export default function DateOpenedField({
           </div>
         </div>
       )}
-    </fieldset>
+
+      {/* Immediate feedback: Predicted Expiration */}
+      {previewExpiry && (
+        <div
+          style={{
+            fontSize: '12px',
+            color: 'var(--color-text)',
+            marginTop: '10px',
+            padding: '6px 8px',
+            background: '#f4f6fb',
+            border: '1px solid var(--color-primary-accent)'
+          }}
+        >
+          Predicted Expiration: <strong>{formatDateDisplay(previewExpiry)}</strong>
+        </div>
+      )}
+    </div>
   );
 }

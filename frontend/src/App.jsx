@@ -603,7 +603,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: '720px', margin: '48px auto', padding: '0 24px' }}>
+    <div style={{ maxWidth: '960px', margin: '40px auto', padding: '0 24px' }}>
       <header
         style={{
           borderBottom: '2px solid var(--color-border)',

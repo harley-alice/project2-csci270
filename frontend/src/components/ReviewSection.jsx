@@ -253,22 +253,22 @@ export default function ReviewSection({
         <thead>
           <tr
             style={{
-              borderBottom: '1px solid var(--color-border)',
+              borderBottom: '2px solid var(--color-border)',
               textAlign: 'left',
               fontSize: '13px',
               color: 'var(--color-text)'
             }}
           >
-            <th scope="col" style={{ padding: '10px 0', width: '28%' }}>
+            <th scope="col" style={{ padding: '10px 12px 10px 0', width: '22%' }}>
               Item
             </th>
-            <th scope="col" style={{ padding: '10px 0', width: '34%' }}>
+            <th scope="col" style={{ padding: '10px 16px', width: '42%' }}>
               Package & Date Opened
             </th>
-            <th scope="col" style={{ padding: '10px 0', width: '18%' }}>
+            <th scope="col" style={{ padding: '10px 12px', width: '16%' }}>
               Est. Shelf Life
             </th>
-            <th scope="col" style={{ padding: '10px 0', width: '12%' }}>
+            <th scope="col" style={{ padding: '10px 12px', width: '12%' }}>
               Certainty
             </th>
             <th scope="col" style={{ padding: '10px 0', textAlign: 'right', width: '8%' }}>
@@ -284,7 +284,7 @@ export default function ReviewSection({
 
             return (
               <tr key={it.id} style={{ borderBottom: '1px solid #e5e5e5' }}>
-                <td style={{ padding: '12px 0', verticalAlign: 'top' }}>
+                <td style={{ padding: '16px 12px 16px 0', verticalAlign: 'top' }}>
                   <select
                     aria-label={`Food classification for item ${it.id}`}
                     value={it.label}
@@ -293,12 +293,13 @@ export default function ReviewSection({
                       border: it.userEdited
                         ? '2px solid var(--color-primary-accent)'
                         : '1px solid var(--color-border)',
-                      padding: '6px 8px',
+                      padding: '8px 10px',
                       fontSize: '13px',
                       background: it.userEdited ? '#f4f6fb' : '#ffffff',
                       fontWeight: it.userEdited ? 600 : 400,
-                      width: '95%',
+                      width: '100%',
                       minHeight: '40px',
+                      borderRadius: 0,
                       textTransform: 'capitalize'
                     }}
                   >
@@ -310,7 +311,7 @@ export default function ReviewSection({
                   </select>
                 </td>
 
-                <td style={{ padding: '12px 0', verticalAlign: 'top' }}>
+                <td style={{ padding: '16px 16px', verticalAlign: 'top' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <select
@@ -319,11 +320,12 @@ export default function ReviewSection({
                         onChange={(e) => togglePackageState(it.id, e.target.value)}
                         style={{
                           border: '1px solid var(--color-border)',
-                          padding: '6px 8px',
+                          padding: '8px 10px',
                           fontSize: '13px',
                           background: '#ffffff',
-                          minHeight: '36px',
-                          width: '120px'
+                          minHeight: '40px',
+                          width: '130px',
+                          borderRadius: 0
                         }}
                       >
                         <option value="sealed">Sealed</option>
@@ -331,46 +333,29 @@ export default function ReviewSection({
                       </select>
 
                       {!isOpened && (
-                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                          (Switch to "Opened" to set opened date)
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                          (Set to "Opened" to track opening date)
                         </span>
                       )}
                     </div>
 
                     {/* Date opened selector when package state is opened */}
                     {isOpened && (
-                      <div>
-                        <DateOpenedField
-                          value={it.openedDate || today}
-                          onChange={(newDate) => updateOpenedDate(it.id, newDate)}
-                          isUnsure={it.isUnsureOpened}
-                          onToggleUnsure={() => toggleUnsureOpened(it.id)}
-                          label={it.id}
-                        />
-
-                        {it.previewExpiry && (
-                          <div
-                            style={{
-                              fontSize: '12px',
-                              color: 'var(--color-text)',
-                              marginTop: '8px',
-                              padding: '6px 8px',
-                              background: '#f4f6fb',
-                              border: '1px solid var(--color-primary-accent)'
-                            }}
-                          >
-                            Predicted Expiration:{' '}
-                            <strong>{formatDateDisplay(it.previewExpiry)}</strong>
-                          </div>
-                        )}
-                      </div>
+                      <DateOpenedField
+                        value={it.openedDate || today}
+                        onChange={(newDate) => updateOpenedDate(it.id, newDate)}
+                        isUnsure={it.isUnsureOpened}
+                        onToggleUnsure={() => toggleUnsureOpened(it.id)}
+                        previewExpiry={it.previewExpiry}
+                        label={it.id}
+                      />
                     )}
                   </div>
                 </td>
 
                 <td
                   style={{
-                    padding: '12px 0',
+                    padding: '16px 12px',
                     fontSize: '13px',
                     color: '#111',
                     verticalAlign: 'top'
@@ -415,9 +400,8 @@ export default function ReviewSection({
                       style={{
                         fontSize: '11px',
                         color: 'var(--color-text-muted)',
-                        marginTop: '4px',
-                        lineHeight: '1.3',
-                        maxWidth: '180px'
+                        marginTop: '6px',
+                        lineHeight: '1.3'
                       }}
                     >
                       {it.usdaGuidance}
@@ -425,7 +409,7 @@ export default function ReviewSection({
                   )}
                 </td>
 
-                <td style={{ padding: '12px 0', fontSize: '13px', verticalAlign: 'top' }}>
+                <td style={{ padding: '16px 12px', fontSize: '13px', verticalAlign: 'top' }}>
                   {it.manuallyAdded ? (
                     <span style={{ color: 'var(--color-primary-accent)', fontWeight: 600 }}>
                       Added
@@ -447,7 +431,7 @@ export default function ReviewSection({
 
                 <td
                   style={{
-                    padding: '12px 0',
+                    padding: '16px 0',
                     textAlign: 'right',
                     verticalAlign: 'top'
                   }}
