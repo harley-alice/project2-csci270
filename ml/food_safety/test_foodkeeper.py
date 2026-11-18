@@ -128,3 +128,101 @@ def test_containers_cannot_receive_storage_guidance(food_class):
 
     with pytest.raises(ValueError, match="unidentified container"):
         get_confirmed_storage_guidance(selection)
+
+def test_milk_still_receives_foodkeeper_guidance(tmp_path):
+    """Verify normal food items still receive storage guidance."""
+
+    from ml.food_safety.foodkeeper import (
+        get_foodkeeper_selection,
+        get_confirmed_storage_guidance,
+    )
+
+    # Create a temporary mapping for milk.
+    mapping_path = tmp_path / "foodkeeper_mapping.yaml"
+    mapping_path.write_text(
+        "foods:\n"
+        "  milk:\n"
+        "    search_terms:\n"
+        "      - milk\n",
+        encoding="utf-8",
+    )
+
+    # Sample FoodKeeper milk record.
+    sample = [
+        {
+            "ID": "27",
+            "Name": "Milk",
+            "Keywords": "Milk",
+            "Refrigerate_Min": 7,
+            "Refrigerate_Max": 10,
+            "Refrigerate_Metric": "Days",
+        }
+    ]
+
+    # Retrieve the milk selection.
+    selection = get_foodkeeper_selection(
+        food_class="milk",
+        records=sample,
+        mapping_path=mapping_path,
+    )
+
+    assert len(selection["candidates"]) == 1
+    assert selection["ready_for_guidance"] is True
+    assert selection["selected_record"]["Name"] == "Milk"
+
+    # Confirm that storage guidance is still available.
+    guidance = get_confirmed_storage_guidance(selection)
+
+    assert "refrigerate" in guidance
+    assert guidance["refrigerate"]["minimum"] == 7
+    assert guidance["refrigerate"]["maximum"] == 10
+    assert guidance["refrigerate"]["metric"] == "Days"
+
+def test_milk_still_receives_foodkeeper_guidance(tmp_path):
+    """Verify normal food items still receive storage guidance."""
+
+    from ml.food_safety.foodkeeper import (
+        get_foodkeeper_selection,
+        get_confirmed_storage_guidance,
+    )
+
+    # Create a temporary mapping for milk.
+    mapping_path = tmp_path / "foodkeeper_mapping.yaml"
+    mapping_path.write_text(
+        "foods:\n"
+        "  milk:\n"
+        "    search_terms:\n"
+        "      - milk\n",
+        encoding="utf-8",
+    )
+
+    # Sample FoodKeeper milk record.
+    sample = [
+        {
+            "ID": "27",
+            "Name": "Milk",
+            "Keywords": "Milk",
+            "Refrigerate_Min": 7,
+            "Refrigerate_Max": 10,
+            "Refrigerate_Metric": "Days",
+        }
+    ]
+
+    # Retrieve the milk selection.
+    selection = get_foodkeeper_selection(
+        food_class="milk",
+        records=sample,
+        mapping_path=mapping_path,
+    )
+
+    assert len(selection["candidates"]) == 1
+    assert selection["ready_for_guidance"] is True
+    assert selection["selected_record"]["Name"] == "Milk"
+
+    # Confirm that storage guidance is still available.
+    guidance = get_confirmed_storage_guidance(selection)
+
+    assert "refrigerate" in guidance
+    assert guidance["refrigerate"]["minimum"] == 7
+    assert guidance["refrigerate"]["maximum"] == 10
+    assert guidance["refrigerate"]["metric"] == "Days"
