@@ -1,0 +1,92 @@
+
+"""Small offline tests for the FoodKeeper integration utilities."""
+
+from ml.food_safety.foodkeeper import (
+    search_foodkeeper,
+    get_record_name,
+    get_recommendations,
+    get_foodkeeper_selection,
+    get_confirmed_storage_guidance,
+)
+from ml.food_safety.date_calculator import calculate_end_date, calculate_date_range
+from datetime import date
+
+
+def test_search_foodkeeper():
+    sample = [
+        {
+            "ID": 43,
+            "Name": "Beef",
+            "Name_subtitle": None,
+            "Keywords": "Beef,ground"
+        },
+        {
+            "ID": 113,
+            "Name": "Chicken",
+            "Name_subtitle": "Whole",
+            "Keywords": "Chicken,whole"
+        },
+        {
+            "ID": 27,
+            "Name": "Milk",
+            "Name_subtitle": None,
+            "Keywords": "Milk"
+        },
+    ]
+
+    matches = search_foodkeeper(sample, "ground beef")
+
+    assert len(matches) == 1
+    assert matches[0]["ID"] == 43
+    assert get_record_name(matches[0]) == "Beef"
+
+    print("FoodKeeper search test passed.")
+
+
+def test_date_calculator():
+    start = date(2026, 11, 8)
+
+    assert calculate_end_date(start, 3) == date(2026, 11, 11)
+
+    assert calculate_date_range(start, 3, 5) == (
+        date(2026, 11, 11),
+        date(2026, 11, 13)
+    )
+
+    print("Date calculator test passed.")
+
+
+def test_unidentified_containers():
+    """Verify jars and cans are blocked from FoodKeeper matches and storage guidance."""
+    sample = [
+        {"ID": 100, "Name": "Jam & Jelly", "Keywords": "jar,jam"},
+        {"ID": 200, "Name": "Soda", "Keywords": "soda,can"},
+    ]
+    for container in ["jar", "soda_can"]:
+        # Block recommendations
+        matches = get_recommendations(food_class=container, records=sample)
+        assert matches == [], f"Expected no recommendations for {container}"
+
+        # Selection workflow requires confirmation and has no candidates
+        selection = get_foodkeeper_selection(food_class=container, records=sample)
+        assert selection["candidates"] == []
+        assert selection["requires_confirmation"] is True
+        assert selection["ready_for_guidance"] is False
+        assert selection["selected_record"] is None
+
+        # Cannot retrieve storage guidance
+        try:
+            get_confirmed_storage_guidance(selection)
+            assert False, f"Expected get_confirmed_storage_guidance to raise for {container}"
+        except ValueError:
+            pass
+
+    print("Unidentified containers test passed.")
+
+
+if __name__ == "__main__":
+    test_search_foodkeeper()
+    test_date_calculator()
+    test_unidentified_containers()
+
+    print("\nAll FoodKeeper integration utility tests passed.")

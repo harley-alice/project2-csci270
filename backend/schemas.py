@@ -16,9 +16,9 @@ class DetectionItem(BaseModel):
     label: str
     display_name: str
     confidence: float
-    days: int
-    days_min: int
-    days_max: int
+    days: Optional[int] = None
+    days_min: Optional[int] = None
+    days_max: Optional[int] = None
     bbox: List[float] = Field(..., description="[ymin, xmin, ymax, xmax] coordinates from 0.0 to 1.0")
     safety_tier: str
     category_name: str
@@ -55,12 +55,12 @@ class RuleCalculationResponse(BaseModel):
     storage_location: str
     is_cooked: bool
     start_date: str
-    shelf_life_days_min: int
-    shelf_life_days_max: int
-    recommended_shelf_life_days: int
-    expiration_date: str
-    earliest_expiration_date: str
-    latest_expiration_date: str
+    shelf_life_days_min: Optional[int] = None
+    shelf_life_days_max: Optional[int] = None
+    recommended_shelf_life_days: Optional[int] = None
+    expiration_date: Optional[str] = None
+    earliest_expiration_date: Optional[str] = None
+    latest_expiration_date: Optional[str] = None
     safety_tier: str
     category_name: str
     requires_user_detail: bool
