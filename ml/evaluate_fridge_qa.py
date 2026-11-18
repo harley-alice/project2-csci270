@@ -1,15 +1,16 @@
-
+﻿
 import csv
+import os
 from pathlib import Path
 from collections import defaultdict
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE_DIR = ROOT / "data" / "qa" / "fridge_images"
+IMAGE_DIR = Path(os.environ.get("FRIDGE_QA_IMAGE_DIR", str(ROOT / "data" / "qa" / "fridge_images")))
 LABEL_DIR = ROOT / "data" / "qa" / "ground_truth"
 CLASS_FILE = ROOT / "data" / "qa" / "food_classes.txt"
-PREDICTION_FILE = ROOT / "ml" / "runs" / "fridge_qa" / "detections.csv"
-OUTPUT_DIR = ROOT / "ml" / "runs" / "fridge_qa"
+PREDICTION_FILE = Path(os.environ.get("FRIDGE_QA_PREDICTION_FILE", str(ROOT / "ml" / "runs" / "fridge_qa" / "detections.csv")))
+OUTPUT_DIR = Path(os.environ.get("FRIDGE_QA_OUTPUT_DIR", str(ROOT / "ml" / "runs" / "fridge_qa")))
 
 IOU_THRESHOLD = 0.50
 
@@ -374,3 +375,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
