@@ -1,5 +1,6 @@
 import React from 'react';
 import BoundingBoxOverlay from './BoundingBoxOverlay';
+import FunDateOpenedPicker from './FunDateOpenedPicker';
 import { formatLabel, formatDateDisplay, getTodayDateStr } from '../utils/dateUtils';
 
 /**
@@ -328,117 +329,27 @@ export default function ReviewSection({
                       <option value="opened">Opened</option>
                     </select>
 
-                    {/* Date opened picker and conservative mode */}
+                    {/* Fun Month & Year Date Opened Box */}
                     {isOpened && (
-                      <div
-                        style={{
-                          background: '#f8f9fa',
-                          border: '1px dashed var(--color-border)',
-                          padding: '8px 10px',
-                          borderRadius: '4px',
-                          marginTop: '2px'
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '6px'
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              color: 'var(--color-text-muted)',
-                              textTransform: 'uppercase'
-                            }}
-                          >
-                            📅 Date Opened:
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => toggleUnsureOpened(it.id)}
-                            aria-pressed={it.isUnsureOpened}
-                            style={{
-                              background: it.isUnsureOpened ? 'var(--color-attention)' : '#ffffff',
-                              color: it.isUnsureOpened ? '#ffffff' : 'var(--color-attention)',
-                              border: '1px solid var(--color-attention)',
-                              padding: '2px 8px',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              minHeight: '26px',
-                              borderRadius: '3px'
-                            }}
-                          >
-                            {it.isUnsureOpened
-                              ? '✓ Unsure (Conservative FoodKeeper applied)'
-                              : '? Unsure when opened'}
-                          </button>
-                        </div>
-
-                        {it.isUnsureOpened ? (
-                          <div
-                            style={{
-                              fontSize: '12px',
-                              color: 'var(--color-attention)',
-                              lineHeight: '1.4'
-                            }}
-                          >
-                            <strong>Conservative safety applied:</strong> FoodKeeper minimum window of{' '}
-                            {it.days} {it.days === 1 ? 'day' : 'days'} selected.
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              flexWrap: 'wrap'
-                            }}
-                          >
-                            <input
-                              type="date"
-                              value={it.openedDate || today}
-                              max={today}
-                              onChange={(e) => updateOpenedDate(it.id, e.target.value)}
-                              aria-label={`Date opened for ${it.label}`}
-                              style={{
-                                border: '1px solid var(--color-border)',
-                                padding: '4px 6px',
-                                fontSize: '12px',
-                                background: '#ffffff',
-                                minHeight: '32px'
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => updateOpenedDate(it.id, today)}
-                              style={{
-                                background: '#ffffff',
-                                border: '1px solid #ccc',
-                                padding: '3px 7px',
-                                fontSize: '11px',
-                                cursor: 'pointer',
-                                minHeight: '28px'
-                              }}
-                            >
-                              Today
-                            </button>
-                          </div>
-                        )}
+                      <div>
+                        <FunDateOpenedPicker
+                          value={it.openedDate || today}
+                          onChange={(newDate) => updateOpenedDate(it.id, newDate)}
+                          isUnsure={it.isUnsureOpened}
+                          onToggleUnsure={() => toggleUnsureOpened(it.id)}
+                          label={it.id}
+                        />
 
                         {it.previewExpiry && (
                           <div
                             style={{
                               fontSize: '11px',
                               color: 'var(--color-text-muted)',
-                              marginTop: '4px'
+                              marginTop: '6px',
+                              padding: '2px 4px'
                             }}
                           >
-                            Predicted Expiry: <strong>{formatDateDisplay(it.previewExpiry)}</strong>
+                            Predicted Expiry: <strong style={{ color: 'var(--color-text)' }}>{formatDateDisplay(it.previewExpiry)}</strong>
                           </div>
                         )}
                       </div>
