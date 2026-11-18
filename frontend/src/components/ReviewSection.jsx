@@ -312,25 +312,33 @@ export default function ReviewSection({
 
                 <td style={{ padding: '12px 0', verticalAlign: 'top' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <select
-                      aria-label={`Package condition for ${it.label}`}
-                      value={it.packageState || 'sealed'}
-                      onChange={(e) => togglePackageState(it.id, e.target.value)}
-                      style={{
-                        border: '1px solid var(--color-border)',
-                        padding: '6px 8px',
-                        fontSize: '13px',
-                        background: '#ffffff',
-                        minHeight: '36px',
-                        width: '120px'
-                      }}
-                    >
-                      <option value="sealed">Sealed</option>
-                      <option value="opened">Opened</option>
-                    </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <select
+                        aria-label={`Package condition for ${it.label}`}
+                        value={it.packageState || 'sealed'}
+                        onChange={(e) => togglePackageState(it.id, e.target.value)}
+                        style={{
+                          border: '1px solid var(--color-border)',
+                          padding: '6px 8px',
+                          fontSize: '13px',
+                          background: '#ffffff',
+                          minHeight: '36px',
+                          width: '120px'
+                        }}
+                      >
+                        <option value="sealed">Sealed</option>
+                        <option value="opened">Opened</option>
+                      </select>
+
+                      {!isOpened && (
+                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                          (Switch to "Opened" to set opened date)
+                        </span>
+                      )}
+                    </div>
 
                     {/* Fun Month & Year Date Opened Box */}
-                    {isOpened && (
+                    {isOpened ? (
                       <div>
                         <FunDateOpenedPicker
                           value={it.openedDate || today}
@@ -349,6 +357,27 @@ export default function ReviewSection({
                               padding: '2px 4px'
                             }}
                           >
+                            Predicted Expiry: <strong style={{ color: 'var(--color-text)' }}>{formatDateDisplay(it.previewExpiry)}</strong>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Sealed Items: show date added & preview expiration */
+                      <div
+                        style={{
+                          background: '#f9f9f9',
+                          border: '1px solid #e5e5e5',
+                          borderRadius: '6px',
+                          padding: '6px 8px',
+                          fontSize: '11px',
+                          color: 'var(--color-text-muted)'
+                        }}
+                      >
+                        <div>
+                          Storage starts: <strong>{formatDateDisplay(today)}</strong> (Today)
+                        </div>
+                        {it.previewExpiry && (
+                          <div style={{ marginTop: '2px' }}>
                             Predicted Expiry: <strong style={{ color: 'var(--color-text)' }}>{formatDateDisplay(it.previewExpiry)}</strong>
                           </div>
                         )}
