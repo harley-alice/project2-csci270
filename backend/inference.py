@@ -104,6 +104,7 @@ class FoodInferenceService:
             iou=iou_threshold,
             device=self.device,
             verbose=False,
+            imgsz=640,
         )
 
         detections: List[Dict[str, Any]] = []
