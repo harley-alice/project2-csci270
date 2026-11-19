@@ -8,7 +8,7 @@ from ultralytics import YOLO
 
 # Project paths
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE_DIR = ROOT / "data" / "qa" / "fridge_images"
+IMAGE_DIR = ROOT / "data" / "qa" / "fridge_images_normalized"
 MODEL_PATH = ROOT / "ml" / "export" / "food_detector_v8n_baseline.onnx"
 OUTPUT_DIR = ROOT / "ml" / "runs" / "fridge_qa"
 

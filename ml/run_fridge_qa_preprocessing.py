@@ -22,11 +22,11 @@ IOU = 0.7
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 VARIANTS = {
-    "baseline": ROOT / "data" / "qa" / "fridge_images",
-    "brightness": ROOT / "data" / "qa" / "preprocessed" / "brightness",
-    "clahe": ROOT / "data" / "qa" / "preprocessed" / "clahe",
-    "white_balance": ROOT / "data" / "qa" / "preprocessed" / "white_balance",
-    "brightness_clahe": ROOT / "data" / "qa" / "preprocessed" / "brightness_clahe",
+    "baseline": ROOT / "data" / "qa" / "fridge_images_normalized",
+    "brightness": ROOT / "data" / "qa" / "preprocessed_normalized" / "brightness",
+    "clahe": ROOT / "data" / "qa" / "preprocessed_normalized" / "clahe",
+    "white_balance": ROOT / "data" / "qa" / "preprocessed_normalized" / "white_balance",
+    "brightness_clahe": ROOT / "data" / "qa" / "preprocessed_normalized" / "brightness_clahe",
 }
 
 
@@ -156,3 +156,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

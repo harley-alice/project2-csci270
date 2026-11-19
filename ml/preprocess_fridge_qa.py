@@ -1,4 +1,4 @@
-
+﻿
 from pathlib import Path
 
 import cv2
@@ -7,8 +7,8 @@ from PIL import Image
 
 # Project paths
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE_DIR = ROOT / "data" / "qa" / "fridge_images"
-OUTPUT_DIR = ROOT / "data" / "qa" / "preprocessed"
+IMAGE_DIR = ROOT / "data" / "qa" / "fridge_images_normalized"
+OUTPUT_DIR = ROOT / "data" / "qa" / "preprocessed_normalized"
 
 # Image settings
 GAMMA = 0.8
@@ -157,3 +157,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

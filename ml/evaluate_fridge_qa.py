@@ -1,4 +1,4 @@
-﻿
+
 import csv
 import os
 from pathlib import Path
@@ -6,7 +6,7 @@ from collections import defaultdict
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE_DIR = Path(os.environ.get("FRIDGE_QA_IMAGE_DIR", str(ROOT / "data" / "qa" / "fridge_images")))
+IMAGE_DIR = Path(os.environ.get("FRIDGE_QA_IMAGE_DIR", str(ROOT / "data" / "qa" / "fridge_images_normalized")))
 LABEL_DIR = ROOT / "data" / "qa" / "ground_truth"
 CLASS_FILE = ROOT / "data" / "qa" / "food_classes.txt"
 PREDICTION_FILE = Path(os.environ.get("FRIDGE_QA_PREDICTION_FILE", str(ROOT / "ml" / "runs" / "fridge_qa" / "detections.csv")))
