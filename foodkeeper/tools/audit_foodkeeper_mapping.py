@@ -1,11 +1,11 @@
 
 import yaml
-from ml.food_safety.foodkeeper import load_foodkeeper, get_record_name
+from foodkeeper.ml.food_safety.foodkeeper import load_foodkeeper, get_record_name
 
 # Load USDA records and existing mappings
 products = load_foodkeeper()
 
-with open("ml/configs/foodkeeper_mapping.yaml", "r", encoding="utf-8") as file:
+with open("foodkeeper/configs/foodkeeper_mapping.yaml", "r", encoding="utf-8") as file:
     mapping = yaml.safe_load(file)
 
 # Create a lookup by USDA product ID

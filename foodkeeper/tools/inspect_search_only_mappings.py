@@ -1,5 +1,5 @@
 
-from ml.food_safety.foodkeeper import (
+from foodkeeper.ml.food_safety.foodkeeper import (
     load_foodkeeper,
     load_mapping,
     get_recommendations,

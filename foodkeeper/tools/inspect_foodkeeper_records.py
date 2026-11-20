@@ -1,5 +1,5 @@
 
-from ml.food_safety.foodkeeper import load_foodkeeper, get_storage_guidance
+from foodkeeper.ml.food_safety.foodkeeper import load_foodkeeper, get_storage_guidance
 
 products = load_foodkeeper()
 

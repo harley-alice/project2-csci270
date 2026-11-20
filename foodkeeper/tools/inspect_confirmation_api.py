@@ -1,7 +1,7 @@
 import inspect
 from pathlib import Path
 
-from ml.food_safety import foodkeeper
+from foodkeeper.ml.food_safety import foodkeeper
 
 functions = [
     "get_recommendations",

@@ -1,7 +1,7 @@
 
 """Small offline tests for the FoodKeeper integration utilities."""
 
-from ml.food_safety.foodkeeper import (
+from foodkeeper.ml.food_safety.foodkeeper import (
     search_foodkeeper,
     get_record_name,
     get_recommendations,
@@ -99,14 +99,14 @@ import pytest
 
 @pytest.mark.parametrize("food_class", ["jar", "soda_can"])
 def test_containers_have_no_foodkeeper_recommendations(food_class):
-    from ml.food_safety.foodkeeper import get_recommendations
+    from foodkeeper.ml.food_safety.foodkeeper import get_recommendations
 
     assert get_recommendations(food_class) == []
 
 
 @pytest.mark.parametrize("food_class", ["jar", "soda_can"])
 def test_containers_require_content_identification(food_class):
-    from ml.food_safety.foodkeeper import get_foodkeeper_selection
+    from foodkeeper.ml.food_safety.foodkeeper import get_foodkeeper_selection
 
     selection = get_foodkeeper_selection(food_class)
 
@@ -118,7 +118,7 @@ def test_containers_require_content_identification(food_class):
 
 @pytest.mark.parametrize("food_class", ["jar", "soda_can"])
 def test_containers_cannot_receive_storage_guidance(food_class):
-    from ml.food_safety.foodkeeper import get_confirmed_storage_guidance
+    from foodkeeper.ml.food_safety.foodkeeper import get_confirmed_storage_guidance
 
     selection = {
         "food_class": food_class,
@@ -132,7 +132,7 @@ def test_containers_cannot_receive_storage_guidance(food_class):
 def test_milk_still_receives_foodkeeper_guidance(tmp_path):
     """Verify normal food items still receive storage guidance."""
 
-    from ml.food_safety.foodkeeper import (
+    from foodkeeper.ml.food_safety.foodkeeper import (
         get_foodkeeper_selection,
         get_confirmed_storage_guidance,
     )
@@ -181,7 +181,7 @@ def test_milk_still_receives_foodkeeper_guidance(tmp_path):
 def test_milk_still_receives_foodkeeper_guidance(tmp_path):
     """Verify normal food items still receive storage guidance."""
 
-    from ml.food_safety.foodkeeper import (
+    from foodkeeper.ml.food_safety.foodkeeper import (
         get_foodkeeper_selection,
         get_confirmed_storage_guidance,
     )

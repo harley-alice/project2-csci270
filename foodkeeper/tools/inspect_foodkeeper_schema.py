@@ -1,5 +1,5 @@
 
-from ml.food_safety.foodkeeper import load_foodkeeper, get_record_name
+from foodkeeper.ml.food_safety.foodkeeper import load_foodkeeper, get_record_name
 
 records = load_foodkeeper()
 
