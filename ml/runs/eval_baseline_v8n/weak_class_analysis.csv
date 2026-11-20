@@ -1,6 +1,0 @@
-class,n_instances,precision,recall,AP50,AP50-95,support,train_instances,true_as_other_top3,pred_as_this_true_other_top3,missed_to_background,false_positive_background,likely_cause
-chocolate,14,1.0,0.762113615169874,0.9903333333333333,0.5754666666666666,low-support: metric unreliable,57,,,2,0,few training instances (57)
-goat_cheese,10,0.9446486504713688,1.0,0.995,0.7383571428571429,low-support: metric unreliable,71,,,0,0,no clear weakness on valid (AP50 0.995 and recall 1.000 are at or above the overall values); the few instances make this uncertain. Note: few training instances (71)
-ham,13,0.9718287219749884,1.0,0.995,0.7162282051282052,low-support: metric unreliable,46,,,0,0,no clear weakness on valid (AP50 0.995 and recall 1.000 are at or above the overall values); the few instances make this uncertain. Note: few training instances (46)
-mango,15,0.9040600292193165,0.6297735476083209,0.9369851768458578,0.8261080026268879,low-support: metric unreliable,23,,,4,2,few training instances (23); 4 missed detections
-pomegranate,15,0.5846713118697104,0.8666666666666667,0.8690431235431234,0.7805237179487178,low-support: metric unreliable,44,orange:2,orange:1,0,8,few training instances (44); true pomegranate most often predicted as orange (2); predicted pomegranate most often actually orange (1)

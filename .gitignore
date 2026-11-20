@@ -252,3 +252,12 @@ runs/
 /share/
 /include/
 /pyvenv.cfg
+
+# Original, processed, annotated, and generated images
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.bmp
+*.tif
+*.tiff
