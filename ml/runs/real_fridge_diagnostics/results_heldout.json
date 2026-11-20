@@ -1,0 +1,483 @@
+{
+  "weights": "baseline_v8n",
+  "imgsz": 640,
+  "ignore": [
+    "jar"
+  ],
+  "photos": 160,
+  "runs": {
+    "0.25": {
+      "tot": {
+        "gt": 663,
+        "ignored_gt": 302,
+        "localized": 79,
+        "e2e": 31,
+        "preds": 431,
+        "ignored_preds": 58
+      },
+      "per_class": {
+        "egg": {
+          "gt": 92,
+          "e2e": 3,
+          "localized": 9,
+          "correct": 3
+        },
+        "yogurt": {
+          "gt": 76,
+          "e2e": 4,
+          "localized": 8,
+          "correct": 4
+        },
+        "milk": {
+          "gt": 91,
+          "e2e": 17,
+          "localized": 19,
+          "correct": 16
+        },
+        "cream": {
+          "gt": 54,
+          "localized": 20
+        },
+        "bread": {
+          "gt": 6
+        },
+        "spinach": {
+          "gt": 15
+        },
+        "cheese": {
+          "gt": 94,
+          "localized": 8,
+          "e2e": 1,
+          "correct": 1
+        },
+        "avocado": {
+          "gt": 16
+        },
+        "apple": {
+          "gt": 51
+        },
+        "banana": {
+          "gt": 1
+        },
+        "butter": {
+          "gt": 63,
+          "localized": 2,
+          "e2e": 1,
+          "correct": 1
+        },
+        "beef": {
+          "gt": 9,
+          "localized": 1
+        },
+        "chicken": {
+          "gt": 12,
+          "localized": 2
+        },
+        "lime": {
+          "gt": 5
+        },
+        "pomegranate": {
+          "gt": 2
+        },
+        "bell_pepper": {
+          "gt": 7,
+          "localized": 1
+        },
+        "onion": {
+          "gt": 9,
+          "localized": 1
+        },
+        "lemon": {
+          "gt": 10,
+          "localized": 1
+        },
+        "bacon": {
+          "gt": 2
+        },
+        "orange": {
+          "gt": 5
+        },
+        "corn": {
+          "gt": 1
+        },
+        "chocolate": {
+          "gt": 7,
+          "localized": 1
+        },
+        "tomato": {
+          "gt": 11,
+          "e2e": 4,
+          "localized": 4,
+          "correct": 4
+        },
+        "carrot": {
+          "gt": 5
+        },
+        "mushrooms": {
+          "gt": 3
+        },
+        "blueberries": {
+          "gt": 5,
+          "localized": 1
+        },
+        "strawberries": {
+          "gt": 9,
+          "e2e": 1,
+          "localized": 1,
+          "correct": 1
+        },
+        "ham": {
+          "gt": 1
+        },
+        "mango": {
+          "gt": 1
+        }
+      },
+      "pairs": {
+        "egg->egg": 3,
+        "cream->milk": 18,
+        "milk->milk": 16,
+        "butter->cheese": 1,
+        "cheese->yogurt": 2,
+        "cheese->chocolate": 1,
+        "cheese->shrimp": 1,
+        "yogurt->yogurt": 4,
+        "cheese->cheese": 1,
+        "cream->egg": 1,
+        "bell_pepper->egg": 1,
+        "yogurt->butter": 1,
+        "lemon->cheese": 1,
+        "chicken->milk": 1,
+        "milk->sugar": 2,
+        "milk->yogurt": 1,
+        "blueberries->milk": 1,
+        "egg->yogurt": 2,
+        "strawberries->strawberries": 1,
+        "cheese->butter": 3,
+        "chicken->yogurt": 1,
+        "egg->flour": 1,
+        "tomato->tomato": 4,
+        "onion->egg": 1,
+        "chocolate->cream": 1,
+        "cream->butter": 1,
+        "beef->bacon": 1,
+        "egg->potato": 1,
+        "yogurt->milk": 3,
+        "egg->bread": 1,
+        "egg->shrimp": 1,
+        "butter->butter": 1
+      }
+    },
+    "0.001": {
+      "tot": {
+        "gt": 663,
+        "ignored_gt": 302,
+        "localized": 490,
+        "e2e": 197,
+        "preds": 25062,
+        "ignored_preds": 745
+      },
+      "per_class": {
+        "egg": {
+          "gt": 92,
+          "e2e": 38,
+          "localized": 76,
+          "correct": 18
+        },
+        "yogurt": {
+          "gt": 76,
+          "e2e": 26,
+          "localized": 54,
+          "correct": 20
+        },
+        "milk": {
+          "gt": 91,
+          "localized": 78,
+          "e2e": 53,
+          "correct": 39
+        },
+        "cream": {
+          "gt": 54,
+          "localized": 51,
+          "e2e": 6
+        },
+        "bread": {
+          "gt": 6,
+          "localized": 6,
+          "e2e": 1,
+          "correct": 1
+        },
+        "spinach": {
+          "gt": 15,
+          "localized": 12,
+          "e2e": 2,
+          "correct": 2
+        },
+        "cheese": {
+          "gt": 94,
+          "localized": 72,
+          "e2e": 33,
+          "correct": 13
+        },
+        "avocado": {
+          "gt": 16,
+          "e2e": 1,
+          "localized": 7,
+          "correct": 1
+        },
+        "apple": {
+          "gt": 51,
+          "e2e": 2,
+          "localized": 18,
+          "correct": 1
+        },
+        "banana": {
+          "gt": 1,
+          "localized": 1
+        },
+        "butter": {
+          "gt": 63,
+          "e2e": 13,
+          "localized": 42,
+          "correct": 2
+        },
+        "beef": {
+          "gt": 9,
+          "localized": 8,
+          "e2e": 1
+        },
+        "chicken": {
+          "gt": 12,
+          "localized": 11,
+          "e2e": 2
+        },
+        "lime": {
+          "gt": 5,
+          "e2e": 1,
+          "localized": 1,
+          "correct": 1
+        },
+        "pomegranate": {
+          "gt": 2
+        },
+        "bell_pepper": {
+          "gt": 7,
+          "e2e": 1,
+          "localized": 5
+        },
+        "onion": {
+          "gt": 9,
+          "localized": 8
+        },
+        "lemon": {
+          "gt": 10,
+          "localized": 9,
+          "e2e": 4,
+          "correct": 2
+        },
+        "bacon": {
+          "gt": 2
+        },
+        "orange": {
+          "gt": 5
+        },
+        "corn": {
+          "gt": 1
+        },
+        "chocolate": {
+          "gt": 7,
+          "localized": 6
+        },
+        "tomato": {
+          "gt": 11,
+          "localized": 10,
+          "e2e": 8,
+          "correct": 8
+        },
+        "carrot": {
+          "gt": 5,
+          "localized": 1
+        },
+        "mushrooms": {
+          "gt": 3,
+          "localized": 3
+        },
+        "blueberries": {
+          "gt": 5,
+          "e2e": 1,
+          "localized": 1
+        },
+        "strawberries": {
+          "gt": 9,
+          "e2e": 4,
+          "localized": 9,
+          "correct": 3
+        },
+        "ham": {
+          "gt": 1,
+          "localized": 1
+        },
+        "mango": {
+          "gt": 1
+        }
+      },
+      "pairs": {
+        "egg->egg": 18,
+        "yogurt->yogurt": 20,
+        "cream->milk": 35,
+        "milk->yogurt": 8,
+        "bread->shrimp": 1,
+        "egg->cheese": 13,
+        "bread->cheese": 2,
+        "egg->potato": 5,
+        "avocado->avocado": 1,
+        "cheese->milk": 11,
+        "cheese->yogurt": 9,
+        "avocado->lemon": 1,
+        "apple->apple": 1,
+        "avocado->yogurt": 1,
+        "bread->bread": 1,
+        "milk->milk": 39,
+        "apple->tomato": 5,
+        "avocado->milk": 1,
+        "banana->cheese": 1,
+        "milk->bell_pepper": 3,
+        "spinach->green_beans": 2,
+        "milk->avocado": 2,
+        "butter->yogurt": 3,
+        "butter->onion": 1,
+        "cheese->cheese": 13,
+        "butter->cheese": 11,
+        "cheese->butter": 9,
+        "beef->bread": 2,
+        "chicken->butter": 1,
+        "lime->lime": 1,
+        "yogurt->milk": 6,
+        "cream->sugar": 4,
+        "milk->flour": 2,
+        "milk->onion": 1,
+        "butter->milk": 13,
+        "cheese->beef": 1,
+        "bread->flour": 2,
+        "butter->sugar": 3,
+        "cheese->goat_cheese": 3,
+        "yogurt->cheese": 3,
+        "onion->egg": 6,
+        "bell_pepper->tomato": 1,
+        "yogurt->butter": 6,
+        "cream->tomato": 1,
+        "egg->ham": 3,
+        "cheese->chocolate": 5,
+        "cheese->shrimp": 1,
+        "egg->blueberries": 1,
+        "yogurt->goat_cheese": 3,
+        "milk->sugar": 8,
+        "butter->butter": 2,
+        "lemon->egg": 3,
+        "cream->cheese": 1,
+        "milk->butter": 3,
+        "cream->egg": 1,
+        "bell_pepper->egg": 1,
+        "bell_pepper->yogurt": 1,
+        "egg->yogurt": 10,
+        "lemon->banana": 1,
+        "milk->lemon": 1,
+        "butter->green_beans": 1,
+        "chicken->milk": 2,
+        "egg->onion": 1,
+        "lemon->cheese": 2,
+        "butter->bell_pepper": 1,
+        "chicken->bacon": 2,
+        "milk->apple": 1,
+        "butter->goat_cheese": 1,
+        "butter->egg": 1,
+        "milk->egg": 4,
+        "onion->sweet_potato": 1,
+        "cream->flour": 2,
+        "butter->ham": 1,
+        "apple->carrot": 1,
+        "apple->egg": 2,
+        "chocolate->yogurt": 1,
+        "yogurt->egg": 1,
+        "egg->bell_pepper": 1,
+        "egg->bread": 4,
+        "tomato->ham": 1,
+        "mushrooms->spinach": 1,
+        "blueberries->milk": 1,
+        "yogurt->sugar": 2,
+        "egg->chocolate": 2,
+        "lemon->potato": 1,
+        "strawberries->strawberries": 3,
+        "milk->bacon": 1,
+        "chocolate->lime": 1,
+        "cheese->egg": 6,
+        "cheese->avocado": 1,
+        "bell_pepper->avocado": 1,
+        "strawberries->avocado": 2,
+        "spinach->avocado": 3,
+        "cheese->ham": 4,
+        "egg->flour": 3,
+        "milk->cream": 1,
+        "butter->chocolate": 1,
+        "cheese->flour": 5,
+        "cheese->sugar": 1,
+        "egg->avocado": 1,
+        "chicken->yogurt": 2,
+        "cream->yogurt": 2,
+        "cream->goat_cheese": 1,
+        "egg->bacon": 2,
+        "tomato->tomato": 8,
+        "spinach->bacon": 3,
+        "apple->bell_pepper": 1,
+        "egg->milk": 6,
+        "butter->flour": 2,
+        "apple->cheese": 4,
+        "apple->chicken": 1,
+        "milk->cheese": 2,
+        "spinach->chocolate": 2,
+        "apple->lemon": 1,
+        "chocolate->cheese": 1,
+        "chocolate->cream": 2,
+        "yogurt->strawberries": 1,
+        "yogurt->blueberries": 6,
+        "cheese->potato": 1,
+        "milk->strawberries": 1,
+        "cream->jar": 2,
+        "yogurt->corn": 2,
+        "yogurt->flour": 1,
+        "milk->chocolate": 1,
+        "chicken->bell_pepper": 1,
+        "strawberries->tomato": 2,
+        "ham->flour": 1,
+        "egg->shrimp": 4,
+        "beef->ham": 2,
+        "egg->mushrooms": 2,
+        "cream->butter": 2,
+        "butter->jar": 1,
+        "carrot->shrimp": 1,
+        "tomato->egg": 1,
+        "chicken->cheese": 2,
+        "strawberries->shrimp": 1,
+        "yogurt->chocolate": 2,
+        "beef->bacon": 1,
+        "chicken->egg": 1,
+        "onion->flour": 1,
+        "cheese->strawberries": 1,
+        "cheese->bacon": 1,
+        "apple->sweet_potato": 1,
+        "bell_pepper->shrimp": 1,
+        "yogurt->tomato": 1,
+        "beef->shrimp": 3,
+        "strawberries->ham": 1,
+        "lemon->lemon": 2,
+        "avocado->cheese": 1,
+        "chocolate->sugar": 1,
+        "avocado->blueberries": 2,
+        "apple->avocado": 1,
+        "spinach->spinach": 2,
+        "mushrooms->cheese": 1,
+        "mushrooms->egg": 1
+      }
+    }
+  }
+}

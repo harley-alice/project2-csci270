@@ -94,3 +94,9 @@ Verify that both services operate together:
 ## Before committing a training run
 
 Run `python ml/sanitize_paths.py` first so run configs (`ml/runs/*/args.yaml`) contain repo-relative paths, not your local absolute paths.
+
+## Held-out real-fridge photos (never train or tune on them)
+
+The 160 real-fridge photos listed in `data/real_fridge/heldout_160.txt` (defined by `data/real_fridge/data_heldout.yaml`) are the held-out evaluation set. They must **never** be used for training, validation during training, hyperparameter tuning, threshold tuning, or choosing between models. They are only for the final comparison, for example `python ml/diagnose_real_fridge.py --data data/real_fridge/data_heldout.yaml --ignore-classes jar`.
+
+Any fine-tune on real fridge photos must use **different** photos, and it must be split by fridge (all photos of one fridge go to the same split), because photos of the same fridge look alike and would leak. Fridge IDs are not known yet, so no such split exists.
