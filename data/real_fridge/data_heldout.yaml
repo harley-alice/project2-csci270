@@ -1,0 +1,46 @@
+# HELD-OUT EVALUATION SET: 160 real-fridge photos. Never use these for training or tuning.
+# Images are EXIF-upright; labels follow the upright view. Paths are relative to this file.
+# The 'train' key is left out on purpose: Ultralytics refuses to train without it. Evaluate with
+#   python ml/diagnose_real_fridge.py --data data/real_fridge/data_heldout.yaml
+val: upright/images
+test: upright/images
+nc: 38
+names:
+- apple
+- avocado
+- bacon
+- banana
+- beef
+- bell_pepper
+- blueberries
+- bread
+- butter
+- carrot
+- cheese
+- chicken
+- chocolate
+- corn
+- cream
+- egg
+- flour
+- goat_cheese
+- green_beans
+- ham
+- jar
+- lemon
+- lime
+- mango
+- milk
+- mushrooms
+- onion
+- orange
+- persimmon
+- pomegranate
+- potato
+- shrimp
+- spinach
+- strawberries
+- sugar
+- sweet_potato
+- tomato
+- yogurt
